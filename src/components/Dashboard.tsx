@@ -13,7 +13,10 @@ export function Dashboard() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem('saticiItemsPerPage');
+    return saved ? parseInt(saved, 10) : 50;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -319,7 +322,9 @@ export function Dashboard() {
                 style={{ width: '80px', padding: '0.3rem' }} 
                 value={itemsPerPage} 
                 onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
+                  const val = Number(e.target.value);
+                  setItemsPerPage(val);
+                  localStorage.setItem('saticiItemsPerPage', val.toString());
                   setCurrentPage(1);
                 }}
               >
