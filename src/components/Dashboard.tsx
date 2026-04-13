@@ -184,28 +184,19 @@ export function Dashboard() {
          </div>
       </div>
 
-      <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1>Satıcı & Mağaza Yönetim Paneli</h1>
-          <p>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>
-          <div style={{ marginTop: '1rem', maxWidth: '400px' }}>
-            <div className="flex justify-between text-sm mb-1">
-              <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Genel Çözüm İlerlemesi</span>
-              <span style={{ fontWeight: 600, color: 'var(--status-resolved)' }}>
-                %{Math.round((resolvedCount / Math.max(1, notes.filter(n => n.status !== 'archived').length)) * 100)}
-              </span>
-            </div>
-            <div style={{ background: 'var(--bg-app)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ 
-                width: `${(resolvedCount / Math.max(1, notes.filter(n => n.status !== 'archived').length)) * 100}%`, 
-                background: 'var(--status-resolved)', 
-                height: '100%', 
-                transition: 'width 0.5s ease-out' 
-              }} />
-            </div>
+      <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 300px' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px' }}>Satıcı & Mağaza Yönetim Paneli</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>
+          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>Genel Çözüm İlerlemesi</span>
+            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-color)' }}>%{progress}</span>
+          </div>
+          <div style={{ height: '6px', background: 'var(--bg-hover)', borderRadius: '3px', marginTop: '0.4rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'linear-gradient(90deg, var(--primary-color), var(--accent-light))', width: `${progress}%`, transition: 'width 0.5s ease' }}></div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
           {selectedIds.length > 0 ? (
             <div className="flex bg-danger-light p-2 rounded gap-4" style={{ border: '1px solid var(--danger)', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
                <span style={{ fontWeight: 600, color: 'var(--danger)', alignSelf: 'center' }}>{selectedIds.length} Seçili</span>
