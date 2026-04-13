@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2 } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 
 export function Dashboard() {
@@ -10,6 +10,7 @@ export function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
   const resolvedCount = notes.filter(n => n.status === 'resolved').length;
@@ -37,8 +38,59 @@ export function Dashboard() {
       requestDate: new Date().toISOString().split('T')[0],
       status: 'pending',
       notifyBrowser: true,
-      notifyEmail: false
+      notifyEmail: false,
+      internalNote: ''
     });
+  };
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const text = evt.target?.result as string;
+      const lines = text.split('\n').filter(l => l.trim() !== '');
+      if (lines.length < 2) {
+        alert("Geçerli bir veri bulunamadı.");
+        return;
+      }
+      
+      const headers = lines[0].split(';').map(h => h.trim().replace(/"/g, ''));
+      const idxStore = headers.indexOf('Mağaza Adı');
+      const idxFrom = headers.indexOf('Kimden Geldiği');
+      const idxSeller = headers.indexOf('Satıcı Adı');
+      const idxPhone = headers.indexOf('Cep No');
+      const idxSubj = headers.indexOf('Konu');
+      const idxDet = headers.indexOf('Konu Detay');
+      const idxCount = headers.indexOf('Adet');
+
+      let imported = 0;
+      for(let i=1; i<lines.length; i++) {
+        const row = lines[i].split(';').map(c => c.trim().replace(/"/g, ''));
+        if (row.length < 2) continue; // skip broken lines
+        
+        await addNote({
+           storeName: idxStore > -1 && row[idxStore] ? row[idxStore] : 'İçe Aktarılan',
+           fromWhom: idxFrom > -1 ? row[idxFrom] : '',
+           sellerName: idxSeller > -1 ? row[idxSeller] : '',
+           phoneNumber: idxPhone > -1 ? row[idxPhone] : '',
+           subject: idxSubj > -1 ? row[idxSubj] : 'Konu Yok',
+           subjectDetail: idxDet > -1 ? row[idxDet] : '',
+           productCount: idxCount > -1 ? parseInt(row[idxCount]) || 1 : 1,
+           solution: '',
+           requestDate: new Date().toISOString().split('T')[0],
+           status: 'pending',
+           notifyBrowser: true,
+           notifyEmail: false,
+           internalNote: ''
+        });
+        imported++;
+      }
+      alert(`${imported} adet satır başarıyla içe aktarıldı!`);
+    };
+    reader.readAsText(file);
+    e.target.value = ''; 
   };
 
   const exportToExcel = () => {
@@ -111,8 +163,28 @@ export function Dashboard() {
         <div>
           <h1>Satıcı & Mağaza Yönetim Paneli</h1>
           <p>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>
+          <div style={{ marginTop: '1rem', maxWidth: '400px' }}>
+            <div className="flex justify-between text-sm mb-1">
+              <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Genel Çözüm İlerlemesi</span>
+              <span style={{ fontWeight: 600, color: 'var(--status-resolved)' }}>
+                %{Math.round((resolvedCount / Math.max(1, notes.filter(n => n.status !== 'archived').length)) * 100)}
+              </span>
+            </div>
+            <div style={{ background: 'var(--bg-app)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ 
+                width: `${(resolvedCount / Math.max(1, notes.filter(n => n.status !== 'archived').length)) * 100}%`, 
+                background: 'var(--status-resolved)', 
+                height: '100%', 
+                transition: 'width 0.5s ease-out' 
+              }} />
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-4">
+          <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
+          <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload size={18} /> İçe Aktar
+          </button>
           <button className="btn btn-outline" onClick={exportToExcel} style={{ color: 'var(--status-resolved)' }}>
             <Download size={18} /> Excel'e Aktar
           </button>

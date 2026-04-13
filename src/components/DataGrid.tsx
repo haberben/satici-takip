@@ -13,15 +13,16 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
   const [showToast, setShowToast] = useState(false);
 
   const columns: { id: keyof SellerNote, width: string, type: string }[] = [
-    { id: 'storeName', width: '10%', type: 'text' },
-    { id: 'fromWhom', width: '10%', type: 'text' },
-    { id: 'sellerName', width: '10%', type: 'text' },
-    { id: 'phoneNumber', width: '10%', type: 'text' },
-    { id: 'subject', width: '14%', type: 'text' },
-    { id: 'subjectDetail', width: '15%', type: 'text' },
-    { id: 'productCount', width: '5%', type: 'number' },
-    { id: 'requestDate', width: '8%', type: 'date' },
-    { id: 'reminderDate', width: '10%', type: 'datetime-local' }
+    { id: 'storeName', width: '10%', type: 'text', label: 'Mağaza Adı' },
+    { id: 'fromWhom', width: '10%', type: 'text', label: 'Kimden Geldiği' },
+    { id: 'sellerName', width: '10%', type: 'text', label: 'Satıcı Adı' },
+    { id: 'phoneNumber', width: '10%', type: 'text', label: 'Cep No' },
+    { id: 'subject', width: '12%', type: 'text', label: 'Konu' },
+    { id: 'subjectDetail', width: '12%', type: 'text', label: 'Konu Detay' },
+    { id: 'internalNote', width: '12%', type: 'text', label: 'Ekstra Not (İç)' },
+    { id: 'productCount', width: '5%', type: 'number', label: 'Adet' },
+    { id: 'requestDate', width: '9%', type: 'date', label: 'Talep Tarihi' },
+    { id: 'reminderDate', width: '10%', type: 'datetime-local', label: 'Hatırlatıcı' }
   ];
 
   const triggerToast = () => {
@@ -83,15 +84,7 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
           <thead>
             <tr>
               <th>Durum</th>
-              <th>Mağaza Adı</th>
-              <th>Kimden Geldiği</th>
-              <th>Satıcı Adı</th>
-              <th>Cep No</th>
-              <th>Konu</th>
-              <th>Konu Detay</th>
-              <th>Adet</th>
-              <th>Talep Tarihi</th>
-              <th>Hatırlatıcı</th>
+              {columns.map(c => <th key={c.id}>{c.label}</th>)}
               <th style={{ textAlign: 'center' }}>Bildirim</th>
               <th style={{ textAlign: 'right' }}>İşlem</th>
             </tr>
@@ -189,13 +182,18 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
                       </button>
 
                       {openHistoryId === note.id && note.history && note.history.length > 0 && (
-                        <div className="history-dropdown" style={{ textAlign: 'left' }}>
-                          <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-hover)', fontWeight: 600 }}>Son Değişiklikler</div>
+                        <div className="history-dropdown" style={{ textAlign: 'left', minWidth: '250px' }}>
+                          <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-hover)', fontWeight: 600 }}>Düzenleme Geçmişi</div>
                           {note.history.map((h, idx) => (
-                            <div key={idx} className="history-item flex justify-between items-center">
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                {new Date(h.timestamp).toLocaleString('tr-TR')}
-                              </span>
+                            <div key={idx} className="history-item flex justify-between items-center" style={{ gap: '1rem', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                  {new Date(h.timestamp).toLocaleString('tr-TR')}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--status-resolved)', fontWeight: 600 }}>
+                                  {h.editedBy || 'Eski Kayıt'}
+                                </span>
+                              </div>
                               <button 
                                 className="btn btn-outline" style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
                                 onClick={() => handleRestore(note.id, h.previousState)}

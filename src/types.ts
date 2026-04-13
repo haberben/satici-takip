@@ -3,6 +3,7 @@ export type SellerStatus = 'pending' | 'resolved' | 'archived';
 export interface NoteHistory {
   timestamp: string;
   previousState: Partial<SellerNote>;
+  editedBy?: string;
 }
 
 export interface SellerNote {
@@ -11,6 +12,7 @@ export interface SellerNote {
   fromWhom: string;
   subject: string;
   subjectDetail: string;
+  internalNote?: string;
   productCount: number;
   sellerName: string;
   phoneNumber: string;

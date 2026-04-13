@@ -120,7 +120,8 @@ export const useStore = create<StoreState>((set, get) => ({
       notifyBrowser: note.notifyBrowser ?? true,
       notifyEmail: note.notifyEmail ?? false,
       history: [],
-      owner_email: activeWorkspace
+      owner_email: activeWorkspace,
+      internalNote: ''
     };
 
     const tempId = crypto.randomUUID();
@@ -149,9 +150,11 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!oldNote) return;
 
     // create history snapshot
+    const editorEmail = localStorage.getItem('saticiUserEmail') || 'Bilinmiyor';
     const historyItem: NoteHistory = {
       timestamp: new Date().toISOString(),
-      previousState: { ...oldNote }
+      previousState: { ...oldNote },
+      editedBy: editorEmail
     };
     
     // limit history to 5 elements (newest at start, drop 6th)
