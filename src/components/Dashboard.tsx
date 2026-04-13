@@ -19,6 +19,9 @@ export function Dashboard() {
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
   const resolvedCount = notes.filter(n => n.status === 'resolved').length;
+  const archivedCount = notes.filter(n => n.status === 'archived').length;
+  const activeCount = notes.filter(n => n.status !== 'archived').length;
+  const progress = Math.round((resolvedCount / Math.max(activeCount, 1)) * 100);
 
   const filteredNotes = notes.filter(note => {
     const matchesSearch = 
