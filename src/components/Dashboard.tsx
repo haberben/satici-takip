@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2 } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 
 export function Dashboard() {
-  const { notes, addNote } = useStore();
+  const { notes, addNote, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel } = useStore();
+  const currentUserEmail = localStorage.getItem('saticiUserEmail');
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -69,9 +70,44 @@ export function Dashboard() {
     link.remove();
   };
 
+  const handleShare = () => {
+    const email = prompt('Panelinizi paylaşmak istediğiniz e-posta adresini girin:');
+    if (email && currentUserEmail) {
+      if(email === currentUserEmail) {
+         alert("Kendi kendinize paylaşım yapamazsınız.");
+         return;
+      }
+      sharePanel(currentUserEmail, email);
+    }
+  };
+
   return (
     <div className="container-fluid">
-      <div className="header">
+      {/* Üst Kısım: Hesaplar & Paylaşım */}
+      <div className="flex justify-between items-center mb-4" style={{ background: 'var(--bg-panel)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+         <div className="flex items-center gap-2">
+            <span style={{ fontWeight: 600 }}>Çalışma Alanı:</span>
+            <select 
+              className="form-select" 
+              style={{ width: 'auto', minWidth: '250px' }}
+              value={activeWorkspace || ''}
+              onChange={(e) => setActiveWorkspace(e.target.value)}
+            >
+              {availableWorkspaces.map(ws => (
+                <option key={ws} value={ws}>
+                  {ws === currentUserEmail ? 'Kişisel Panelim ('+ws+')' : `${ws} (Paylaşılan)`}
+                </option>
+              ))}
+            </select>
+         </div>
+         {activeWorkspace === currentUserEmail && (
+           <button className="btn btn-outline" onClick={handleShare}>
+             <Share2 size={18} /> Panelimi Paylaş
+           </button>
+         )}
+      </div>
+
+      <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1>Satıcı & Mağaza Yönetim Paneli</h1>
           <p>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>

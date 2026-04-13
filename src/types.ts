@@ -24,10 +24,19 @@ export interface SellerNote {
   notifyEmail?: boolean;
   history?: NoteHistory[];
   created_at?: string;
+  owner_email?: string;
 }
 
 export interface GlobalNote {
   id: string;
   content: string;
   updated_at: string;
+  owner_email?: string;
 }
+
+export interface PanelShare {
+  id: string;
+  owner_email: string;
+  shared_with_email: string;
+}
+

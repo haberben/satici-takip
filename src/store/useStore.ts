@@ -7,6 +7,10 @@ interface StoreState {
   globalNote: string;
   globalNoteId: string | null;
   isLoading: boolean;
+  activeWorkspace: string | null;
+  availableWorkspaces: string[];
+  initWorkspaces: (userEmail: string) => Promise<void>;
+  setActiveWorkspace: (workspaceEmail: string) => void;
   fetchNotes: () => Promise<void>;
   fetchGlobalNote: () => Promise<void>;
   updateGlobalNote: (content: string) => Promise<void>;
@@ -14,6 +18,8 @@ interface StoreState {
   updateNote: (id: string, newValues: Partial<SellerNote>) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
   markReminderSent: (id: string) => Promise<void>;
+  sharePanel: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
+  removeShare: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -21,39 +27,71 @@ export const useStore = create<StoreState>((set, get) => ({
   globalNote: '',
   globalNoteId: null,
   isLoading: false,
+  activeWorkspace: null,
+  availableWorkspaces: [],
+
+  initWorkspaces: async (userEmail: string) => {
+    // Kendi hesabimiz her zaman var
+    let workspaces = [userEmail];
+    
+    // Bize paylasilan panelleri bul
+    const { data } = await supabase
+      .from('panel_shares')
+      .select('owner_email')
+      .eq('shared_with_email', userEmail);
+    
+    if (data) {
+      workspaces = [...workspaces, ...data.map(d => d.owner_email)];
+    }
+    
+    set({ availableWorkspaces: workspaces, activeWorkspace: userEmail });
+    get().fetchNotes();
+  },
+
+  setActiveWorkspace: (workspaceEmail: string) => {
+    set({ activeWorkspace: workspaceEmail });
+    get().fetchNotes();
+  },
 
   fetchNotes: async () => {
+    const { activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
     set({ isLoading: true });
     const { data, error } = await supabase
       .from('notes')
       .select('*')
+      .eq('owner_email', activeWorkspace)
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      // JSON parse for history if needed (supabase pg returns array of objects naturally for jsonb)
       set({ notes: data as SellerNote[] });
     }
     set({ isLoading: false });
   },
 
   fetchGlobalNote: async () => {
+    const { activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
     const { data, error } = await supabase
       .from('global_notes')
       .select('*')
-      .order('updated_at', { ascending: false })
+      .eq('owner_email', activeWorkspace)
       .limit(1)
       .single();
 
     if (!error && data) {
       set({ globalNote: data.content, globalNoteId: data.id });
     } else {
-      // Tabloda kayıt yoksa veya hata varsa initial değer
       set({ globalNote: '', globalNoteId: null });
     }
   },
 
   updateGlobalNote: async (content: string) => {
-    const { globalNoteId } = get();
+    const { globalNoteId, activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
     set({ globalNote: content }); // optimistic update
 
     if (globalNoteId) {
@@ -64,7 +102,7 @@ export const useStore = create<StoreState>((set, get) => ({
     } else {
       const { data } = await supabase
         .from('global_notes')
-        .insert([{ content }])
+        .insert([{ content, owner_email: activeWorkspace }])
         .select()
         .single();
       if (data) {
@@ -74,12 +112,15 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   addNote: async (note) => {
-    // defaults for new note
+    const { activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
     const noteData = {
       ...note,
       notifyBrowser: note.notifyBrowser ?? true,
       notifyEmail: note.notifyEmail ?? false,
-      history: []
+      history: [],
+      owner_email: activeWorkspace
     };
 
     const tempId = crypto.randomUUID();
@@ -166,6 +207,30 @@ export const useStore = create<StoreState>((set, get) => ({
 
     if (error) {
       console.error('Supabase markReminderSent Error:', error.message);
+    }
+  },
+
+  sharePanel: async (ownerEmail: string, sharedWithEmail: string) => {
+    const { error } = await supabase
+      .from('panel_shares')
+      .insert([{ owner_email: ownerEmail, shared_with_email: sharedWithEmail }]);
+    
+    if (error) {
+      console.error('Share Panel Error:', error.message);
+      alert('Paylaşım eklenirken bir hata oluştu: ' + error.message);
+    } else {
+      alert(sharedWithEmail + ' artık panelinizi görebilir.');
+    }
+  },
+
+  removeShare: async (ownerEmail: string, sharedWithEmail: string) => {
+    const { error } = await supabase
+      .from('panel_shares')
+      .delete()
+      .match({ owner_email: ownerEmail, shared_with_email: sharedWithEmail });
+    
+    if (error) {
+      console.error('Remove Share Error:', error.message);
     }
   }
 }));

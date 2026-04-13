@@ -42,14 +42,14 @@ function LoginScreen({ onLogin }: { onLogin: (email: string) => void }) {
 }
 
 function App() {
-  const { notes, markReminderSent, fetchNotes } = useStore();
+  const { notes, markReminderSent, initWorkspaces } = useStore();
   const [userEmail, setUserEmail] = useState<string | null>(localStorage.getItem('saticiUserEmail'));
 
   useEffect(() => {
     if (userEmail) {
-      fetchNotes();
+      initWorkspaces(userEmail);
     }
-  }, [fetchNotes, userEmail]);
+  }, [userEmail, initWorkspaces]);
 
   useEffect(() => {
     if (!userEmail) return;
