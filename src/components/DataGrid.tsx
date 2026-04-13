@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { type SellerNote } from '../types';
 import { useStore } from '../store/useStore';
 import { History, Bell, Mail, Trash2, CheckCircle2 } from 'lucide-react';
@@ -115,7 +115,8 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
                   
                   {columns.map(col => {
                     const isEditing = editingCell?.rowId === note.id && editingCell?.col === col.id;
-                    const value = note[col.id as keyof SellerNote];
+                    const rawValue = note[col.id as keyof SellerNote];
+                    const value = typeof rawValue === 'boolean' || Array.isArray(rawValue) ? '' : rawValue as React.ReactNode;
 
                     return (
                       <td key={col.id} style={{ minWidth: col.width }}>
