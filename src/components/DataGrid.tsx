@@ -1,211 +1,218 @@
 import { useState, useRef, useEffect } from 'react';
 import { type SellerNote } from '../types';
 import { useStore } from '../store/useStore';
-import { History, Bell, Mail, Trash2 } from 'lucide-react';
-
-interface CellProps {
-  value: any;
-  type?: string;
-  onSave: (val: any) => void;
-  width?: string;
-}
-
-function EditableCell({ value, type = 'text', onSave, width }: CellProps) {
-  const [editing, setEditing] = useState(false);
-  const [val, setVal] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setVal(value);
-  }, [value]);
-
-  useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editing]);
-
-  const handleBlur = () => {
-    setEditing(false);
-    if (val !== value) {
-      // Type conversions
-      const finalVal = type === 'number' ? Number(val) : val;
-      onSave(finalVal);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
-      e.preventDefault();
-      handleBlur();
-
-      // Biraz bekleyip DOM üzerinde bir sonraki Editable hücreyi bulup açalım
-      setTimeout(() => {
-        const currentTd = inputRef.current?.closest('td');
-        let nextTd = currentTd?.nextElementSibling;
-        let nextContent = nextTd?.querySelector('.cell-content') as HTMLElement;
-        
-        while (nextTd && !nextContent) {
-           nextTd = nextTd.nextElementSibling;
-           if (nextTd) nextContent = nextTd.querySelector('.cell-content') as HTMLElement;
-        }
-
-        if (nextContent) {
-          // React event'ini tetiklemek için double click dispatch
-          const event = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
-          nextContent.dispatchEvent(event);
-        }
-      }, 50);
-    }
-    if (e.key === 'Escape') {
-      setVal(value);
-      setEditing(false);
-    }
-  };
-
-  return (
-    <td style={{ minWidth: width }}>
-      {editing ? (
-        <input 
-          ref={inputRef}
-          type={type}
-          value={val || ''}
-          onChange={(e) => setVal(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          className="cell-input"
-        />
-      ) : (
-        <div className="cell-content" onDoubleClick={() => setEditing(true)}>
-          {value}
-        </div>
-      )}
-    </td>
-  );
-}
+import { History, Bell, Mail, Trash2, CheckCircle2 } from 'lucide-react';
 
 export function DataGrid({ notes }: { notes: SellerNote[] }) {
   const { updateNote, deleteNote } = useStore();
   const [openHistoryId, setOpenHistoryId] = useState<string | null>(null);
+  
+  // React-based Grid Navigation State
+  const [editingCell, setEditingCell] = useState<{ rowId: string, col: keyof SellerNote } | null>(null);
+  const [editValue, setEditValue] = useState<any>('');
+  const [showToast, setShowToast] = useState(false);
 
-  const StatusTemplate = ({ note }: { note: SellerNote }) => (
-    <td>
-      <select 
-        className="cell-select status"
-        value={note.status}
-        onChange={(e) => updateNote(note.id, { status: e.target.value as any })}
-      >
-        <option value="pending">Devam Ediyor</option>
-        <option value="resolved">Çözüldü</option>
-        <option value="archived">Arşivle</option>
-      </select>
-    </td>
-  );
+  const columns: { id: keyof SellerNote, width: string, type: string }[] = [
+    { id: 'storeName', width: '150px', type: 'text' },
+    { id: 'fromWhom', width: '150px', type: 'text' },
+    { id: 'sellerName', width: '150px', type: 'text' },
+    { id: 'phoneNumber', width: '130px', type: 'text' },
+    { id: 'subject', width: '180px', type: 'text' },
+    { id: 'subjectDetail', width: '250px', type: 'text' },
+    { id: 'productCount', width: '80px', type: 'number' },
+    { id: 'requestDate', width: '130px', type: 'date' },
+    { id: 'reminderDate', width: '180px', type: 'datetime-local' }
+  ];
 
-  const NotificationsTemplate = ({ note }: { note: SellerNote }) => (
-    <td style={{ textAlign: 'center' }}>
-      <div className="flex gap-2 justify-center" style={{ padding: '0.5rem' }}>
-        <button 
-          title="Tarayıcı Bildirimi"
-          onClick={() => updateNote(note.id, { notifyBrowser: !note.notifyBrowser })}
-          style={{ opacity: note.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <Bell size={16} className={note.notifyBrowser ? "text-accent" : ""} />
-        </button>
-        <button 
-          title="E-posta Bildirimi"
-          onClick={() => updateNote(note.id, { notifyEmail: !note.notifyEmail })}
-          style={{ opacity: note.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <Mail size={16} className={note.notifyEmail ? "text-accent" : ""} />
-        </button>
-      </div>
-    </td>
-  );
+  const triggerToast = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  const handleCommit = (rowId: string, colId: keyof SellerNote, finalVal: any, goToNext: boolean = false) => {
+    const note = notes.find(n => n.id === rowId);
+    if (note && note[colId] !== finalVal) {
+      const payload: any = { [colId]: finalVal };
+      if (colId === 'reminderDate') payload.reminderSent = false;
+      updateNote(rowId, payload);
+      triggerToast();
+    }
+
+    if (goToNext) {
+      // Find the next column index
+      const colIndex = columns.findIndex(c => c.id === colId);
+      if (colIndex !== -1 && colIndex < columns.length - 1) {
+        const nextCol = columns[colIndex + 1];
+        setEditingCell({ rowId, col: nextCol.id });
+        const nextVal = notes.find(n => n.id === rowId)?.[nextCol.id];
+        setEditValue(nextVal || '');
+        return;
+      }
+    }
+    setEditingCell(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, rowId: string, colId: keyof SellerNote, type: string) => {
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      const finalVal = type === 'number' ? Number(editValue) : editValue;
+      handleCommit(rowId, colId, finalVal, true);
+    } else if (e.key === 'Escape') {
+      setEditingCell(null);
+    }
+  };
 
   const handleRestore = (noteId: string, previousState: Partial<SellerNote>) => {
     if (confirm('Bu sürüme dönmek istediğinize emin misiniz?')) {
       updateNote(noteId, previousState);
       setOpenHistoryId(null);
+      triggerToast();
     }
   };
 
   return (
-    <div className="grid-container">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Durum</th>
-            <th>Mağaza Adı</th>
-            <th>Kimden Geldiği</th>
-            <th>Satıcı Adı</th>
-            <th>Cep No</th>
-            <th>Konu</th>
-            <th>Konu Detay</th>
-            <th>Adet</th>
-            <th>Talep Tarihi</th>
-            <th>Hatırlatıcı</th>
-            <th>Bildirimler</th>
-            <th style={{ textAlign: 'right' }}>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-          {notes.map(note => (
-            <tr key={note.id} className={note.status === 'archived' ? 'opacity-80' : ''}>
-              <StatusTemplate note={note} />
-              <EditableCell width="150px" value={note.storeName} onSave={(val) => updateNote(note.id, { storeName: val })} />
-              <EditableCell width="150px" value={note.fromWhom} onSave={(val) => updateNote(note.id, { fromWhom: val })} />
-              <EditableCell width="150px" value={note.sellerName} onSave={(val) => updateNote(note.id, { sellerName: val })} />
-              <EditableCell width="130px" value={note.phoneNumber} onSave={(val) => updateNote(note.id, { phoneNumber: val })} />
-              <EditableCell width="180px" value={note.subject} onSave={(val) => updateNote(note.id, { subject: val })} />
-              <EditableCell width="250px" value={note.subjectDetail} onSave={(val) => updateNote(note.id, { subjectDetail: val })} />
-              <EditableCell type="number" width="80px" value={note.productCount} onSave={(val) => updateNote(note.id, { productCount: val })} />
-              <EditableCell type="date" width="130px" value={note.requestDate} onSave={(val) => updateNote(note.id, { requestDate: val })} />
-              <EditableCell type="datetime-local" width="180px" value={note.reminderDate} onSave={(val) => updateNote(note.id, { reminderDate: val, reminderSent: false })} />
-              <NotificationsTemplate note={note} />
-              
-              <td style={{ textAlign: 'right', padding: '0.75rem 1rem' }}>
-                <div className="flex gap-2 items-center justify-end" style={{ position: 'relative' }}>
-                  <button 
-                    className="btn-icon" 
-                    title="Geçmiş Kayıtlar"
-                    onClick={() => setOpenHistoryId(openHistoryId === note.id ? null : note.id)}
-                  >
-                    <History size={16} />
-                  </button>
-                  <button 
-                    className="btn-icon text-danger" 
-                    title="Sil"
-                    onClick={() => {
-                      if(confirm('Kayıt silinecek. Emin misiniz?')) deleteNote(note.id);
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+    <>
+      {showToast && (
+        <div className="save-toast">
+          <CheckCircle2 size={18} /> Kaydedildi
+        </div>
+      )}
 
-                  {/* History Dropdown */}
-                  {openHistoryId === note.id && note.history && note.history.length > 0 && (
-                    <div className="history-dropdown" style={{ textAlign: 'left' }}>
-                      <div style={{ padding: '0.5rem', background: '#f8fafc', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>Son Değişiklikler</div>
-                      {note.history.map((h, idx) => (
-                        <div key={idx} className="history-item flex justify-between items-center">
-                          <span style={{ fontSize: '0.75rem' }}>{new Date(h.timestamp).toLocaleString('tr-TR')}</span>
-                          <button 
-                            className="btn btn-outline" style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                            onClick={() => handleRestore(note.id, h.previousState)}
-                          >
-                            Geri Dön
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </td>
+      <div className="grid-container data-table-wrapper">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Durum</th>
+              <th>Mağaza Adı</th>
+              <th>Kimden Geldiği</th>
+              <th>Satıcı Adı</th>
+              <th>Cep No</th>
+              <th>Konu</th>
+              <th>Konu Detay</th>
+              <th>Adet</th>
+              <th>Talep Tarihi</th>
+              <th>Hatırlatıcı</th>
+              <th style={{ textAlign: 'center' }}>Bildirim</th>
+              <th style={{ textAlign: 'right' }}>İşlem</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {notes.map(note => {
+              const rowClass = note.status === 'archived' ? 'opacity-60' : '';
+              return (
+                <tr key={note.id} className={rowClass}>
+                  <td>
+                    <select 
+                      className="cell-select"
+                      value={note.status}
+                      onChange={(e) => updateNote(note.id, { status: e.target.value as any })}
+                    >
+                      <option value="pending">Devam Ediyor</option>
+                      <option value="resolved">Çözüldü</option>
+                      <option value="archived">Arşivle</option>
+                    </select>
+                  </td>
+                  
+                  {columns.map(col => {
+                    const isEditing = editingCell?.rowId === note.id && editingCell?.col === col.id;
+                    const value = note[col.id as keyof SellerNote];
+
+                    return (
+                      <td key={col.id} style={{ minWidth: col.width }}>
+                        <div 
+                          className="cell-wrapper"
+                          onDoubleClick={() => {
+                            setEditingCell({ rowId: note.id, col: col.id });
+                            setEditValue(value || '');
+                          }}
+                        >
+                          {isEditing ? (
+                            <input 
+                              autoFocus
+                              type={col.type}
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={() => {
+                                const finalVal = col.type === 'number' ? Number(editValue) : editValue;
+                                handleCommit(note.id, col.id, finalVal, false);
+                              }}
+                              onKeyDown={(e) => handleKeyDown(e, note.id, col.id, col.type)}
+                              className="cell-input-active"
+                            />
+                          ) : (
+                            <div className="cell-content">
+                              {value}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="flex gap-2 justify-center py-2">
+                      <button 
+                        title="Tarayıcı Bildirimi"
+                        onClick={() => updateNote(note.id, { notifyBrowser: !note.notifyBrowser })}
+                        style={{ opacity: note.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        <Bell size={16} />
+                      </button>
+                      <button 
+                        title="E-posta Bildirimi"
+                        onClick={() => updateNote(note.id, { notifyEmail: !note.notifyEmail })}
+                        style={{ opacity: note.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                      >
+                        <Mail size={16} />
+                      </button>
+                    </div>
+                  </td>
+                  
+                  <td style={{ textAlign: 'right', padding: '0 1rem' }}>
+                    <div className="flex gap-2 items-center justify-end" style={{ position: 'relative' }}>
+                      <button 
+                        className="btn-icon" 
+                        title="Geçmiş"
+                        onClick={() => setOpenHistoryId(openHistoryId === note.id ? null : note.id)}
+                      >
+                        <History size={16} />
+                      </button>
+                      <button 
+                        className="btn-icon" style={{ color: 'var(--danger)' }}
+                        title="Sil"
+                        onClick={() => {
+                          if(confirm('Kayıt tamamen silinecek. Emin misiniz?')) deleteNote(note.id);
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                      {openHistoryId === note.id && note.history && note.history.length > 0 && (
+                        <div className="history-dropdown" style={{ textAlign: 'left' }}>
+                          <div style={{ padding: '0.75rem 1rem', background: 'var(--bg-hover)', fontWeight: 600 }}>Son Değişiklikler</div>
+                          {note.history.map((h, idx) => (
+                            <div key={idx} className="history-item flex justify-between items-center">
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                {new Date(h.timestamp).toLocaleString('tr-TR')}
+                              </span>
+                              <button 
+                                className="btn btn-outline" style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}
+                                onClick={() => handleRestore(note.id, h.previousState)}
+                              >
+                                Geri Dön
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

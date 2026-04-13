@@ -58,21 +58,21 @@ export function Dashboard() {
       </div>
 
       <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        <div className="grid-container" style={{ padding: '1.5rem', textAlign: 'center' }}>
-          <h3>Toplam Aktif</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{notes.filter(n => n.status !== 'archived').length}</p>
+        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{notes.filter(n => n.status !== 'archived').length}</p>
         </div>
-        <div className="grid-container" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--status-pending)' }}>
-          <h3>Devam Eden</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--status-pending)' }}>{pendingCount}</p>
+        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-pending)' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Devam Eden</h3>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-pending)' }}>{pendingCount}</p>
         </div>
-        <div className="grid-container" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--status-resolved)' }}>
-          <h3>Çözülen</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
+        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-resolved)' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Çözülen</h3>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
         </div>
-        <div className="grid-container" style={{ padding: '1.5rem', textAlign: 'center', borderLeft: '4px solid var(--stratus-archived)' }}>
-          <h3>Arşivlenen</h3>
-          <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--status-archived)' }}>{notes.filter(n => n.status === 'archived').length}</p>
+        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-archived)' }}>
+          <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{notes.filter(n => n.status === 'archived').length}</p>
         </div>
       </div>
 
