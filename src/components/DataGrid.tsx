@@ -12,7 +12,7 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
   const [editValue, setEditValue] = useState<any>('');
   const [showToast, setShowToast] = useState(false);
 
-  const columns: { id: keyof SellerNote, width: string, type: string }[] = [
+  const columns: { id: keyof SellerNote, width: string, type: string, label: string }[] = [
     { id: 'storeName', width: '10%', type: 'text', label: 'Mağaza Adı' },
     { id: 'fromWhom', width: '10%', type: 'text', label: 'Kimden Geldiği' },
     { id: 'sellerName', width: '10%', type: 'text', label: 'Satıcı Adı' },
