@@ -13,6 +13,8 @@ export function Dashboard() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
@@ -31,6 +33,9 @@ export function Dashboard() {
     if (filter === 'all') return isMatch && note.status !== 'archived';
     return isMatch && note.status === filter;
   });
+
+  const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
+  const paginatedNotes = filteredNotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleAddNewRow = () => {
     addNote({
@@ -300,7 +305,52 @@ export function Dashboard() {
           <p>Kayıt bulunamadı. Lütfen filtreyi değiştirin veya Ekle butonuna basın.</p>
         </div>
       ) : (
-        <DataGrid notes={filteredNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+        <>
+          <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+          
+          <div className="flex justify-between items-center mb-4" style={{ padding: '0.75rem 1rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sayfa Başına Gösterim:</span>
+              <select 
+                className="form-select" 
+                style={{ width: '80px', padding: '0.3rem' }} 
+                value={itemsPerPage} 
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={250}>250</option>
+                <option value={1000}>1000</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button 
+                className="btn btn-outline" 
+                disabled={currentPage === 1} 
+                onClick={() => setCurrentPage(p => p - 1)}
+                style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                Önceki
+              </button>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                Sayfa {currentPage} / {Math.max(1, totalPages)}
+              </span>
+              <button 
+                className="btn btn-outline" 
+                disabled={currentPage >= totalPages} 
+                onClick={() => setCurrentPage(p => p + 1)}
+                style={{ opacity: currentPage >= totalPages ? 0.5 : 1 }}
+              >
+                Sonraki
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       <GlobalNotesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
