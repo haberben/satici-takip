@@ -50,46 +50,51 @@ export function Dashboard() {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       const text = evt.target?.result as string;
-      const lines = text.split('\n').filter(l => l.trim() !== '');
+      const cleanText = text.replace(/^\uFEFF/, ''); // BOM temizliği
+      const lines = cleanText.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
       if (lines.length < 2) {
-        alert("Geçerli bir veri bulunamadı.");
+        alert("Geçerli bir veri/satır bulunamadı.");
         return;
       }
       
-      const headers = lines[0].split(';').map(h => h.trim().replace(/"/g, ''));
-      const idxStore = headers.indexOf('Mağaza Adı');
-      const idxFrom = headers.indexOf('Kimden Geldiği');
-      const idxSeller = headers.indexOf('Satıcı Adı');
-      const idxPhone = headers.indexOf('Cep No');
-      const idxSubj = headers.indexOf('Konu');
-      const idxDet = headers.indexOf('Konu Detay');
-      const idxCount = headers.indexOf('Adet');
+      const separator = lines[0].includes(';') ? ';' : (lines[0].includes('\t') ? '\t' : ',');
+      const headers = lines[0].split(separator).map(h => h.trim().replace(/"/g, '').toLowerCase());
+      
+      const idxStore = headers.findIndex(h => h.includes('mağaza') || h.includes('magaza'));
+      const idxFrom = headers.findIndex(h => h.includes('kimden'));
+      const idxSeller = headers.findIndex(h => h.includes('satıcı') || h.includes('satici'));
+      const idxPhone = headers.findIndex(h => h.includes('cep') || h.includes('tel'));
+      const idxSubj = headers.findIndex(h => h === 'konu');
+      const idxDet = headers.findIndex(h => h.includes('detay'));
+      const idxCount = headers.findIndex(h => h.includes('adet'));
+      const idxNote = headers.findIndex(h => h.includes('ekstra') || h.includes('iç not'));
 
       let imported = 0;
-      for(let i=1; i<lines.length; i++) {
-        const row = lines[i].split(';').map(c => c.trim().replace(/"/g, ''));
-        if (row.length < 2) continue; // skip broken lines
+      for(let i = 1; i < lines.length; i++) {
+        // virgüller arası parçala, boşlukları temizle
+        const row = lines[i].split(separator).map(c => c.trim().replace(/"/g, ''));
+        if (!row.some(c => c !== '')) continue; // Tamamen boş satır atlanır
         
         await addNote({
            storeName: idxStore > -1 && row[idxStore] ? row[idxStore] : 'İçe Aktarılan',
-           fromWhom: idxFrom > -1 ? row[idxFrom] : '',
-           sellerName: idxSeller > -1 ? row[idxSeller] : '',
-           phoneNumber: idxPhone > -1 ? row[idxPhone] : '',
-           subject: idxSubj > -1 ? row[idxSubj] : 'Konu Yok',
-           subjectDetail: idxDet > -1 ? row[idxDet] : '',
-           productCount: idxCount > -1 ? parseInt(row[idxCount]) || 1 : 1,
+           fromWhom: idxFrom > -1 && row[idxFrom] ? row[idxFrom] : '',
+           sellerName: idxSeller > -1 && row[idxSeller] ? row[idxSeller] : '',
+           phoneNumber: idxPhone > -1 && row[idxPhone] ? row[idxPhone] : '',
+           subject: idxSubj > -1 && row[idxSubj] ? row[idxSubj] : 'Konu Yok',
+           subjectDetail: idxDet > -1 && row[idxDet] ? row[idxDet] : '',
+           productCount: idxCount > -1 && parseInt(row[idxCount]) ? parseInt(row[idxCount]) : 1,
            solution: '',
            requestDate: new Date().toISOString().split('T')[0],
            status: 'pending',
            notifyBrowser: true,
            notifyEmail: false,
-           internalNote: ''
+           internalNote: idxNote > -1 && row[idxNote] ? row[idxNote] : ''
         });
         imported++;
       }
       alert(`${imported} adet satır başarıyla içe aktarıldı!`);
     };
-    reader.readAsText(file);
+    reader.readAsText(file, 'UTF-8');
     e.target.value = ''; 
   };
 
