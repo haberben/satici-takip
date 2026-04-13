@@ -243,7 +243,7 @@ export function Dashboard() {
       <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
           <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{notes.filter(n => n.status !== 'archived').length}</p>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{activeCount}</p>
         </div>
         <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-pending)' }}>
           <h3 style={{ marginBottom: '0.5rem' }}>Devam Eden</h3>
@@ -255,7 +255,7 @@ export function Dashboard() {
         </div>
         <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-archived)' }}>
           <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{notes.filter(n => n.status === 'archived').length}</p>
+          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{archivedCount}</p>
         </div>
       </div>
 
