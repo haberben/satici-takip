@@ -1,15 +1,18 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 
 export function Dashboard() {
   const { notes, addNote, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterSeller, setFilterSeller] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
@@ -20,9 +23,13 @@ export function Dashboard() {
       note.storeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
       note.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesSeller = filterSeller ? note.sellerName.toLowerCase().includes(filterSeller.toLowerCase()) : true;
+    const matchesDate = filterDate ? note.requestDate === filterDate : true;
     
-    if (filter === 'all') return matchesSearch && note.status !== 'archived';
-    return matchesSearch && note.status === filter;
+    const isMatch = matchesSearch && matchesSeller && matchesDate;
+    if (filter === 'all') return isMatch && note.status !== 'archived';
+    return isMatch && note.status === filter;
   });
 
   const handleAddNewRow = () => {
@@ -98,9 +105,10 @@ export function Dashboard() {
     e.target.value = ''; 
   };
 
-  const exportToExcel = () => {
-    const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
-    const rows = filteredNotes.map(n => [
+  const exportToExcel = (onlySelected: boolean = false) => {
+    const dataToExport = onlySelected ? notes.filter(n => selectedIds.includes(n.id)) : filteredNotes;
+    const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'İç Not', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
+    const rows = dataToExport.map(n => [
       n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
       n.storeName,
       n.fromWhom,
@@ -108,6 +116,7 @@ export function Dashboard() {
       n.phoneNumber,
       n.subject,
       n.subjectDetail,
+      n.internalNote || '',
       n.productCount.toString(),
       n.requestDate,
       n.reminderDate || ''
@@ -197,19 +206,38 @@ export function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
-          <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
-            <Upload size={18} /> İçe Aktar
-          </button>
-          <button className="btn btn-outline" onClick={exportToExcel} style={{ color: 'var(--status-resolved)' }}>
-            <Download size={18} /> Excel'e Aktar
-          </button>
-          <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
-            <BookOpen size={18} /> Serbest Defter
-          </button>
-          <button className="btn btn-primary" onClick={handleAddNewRow}>
-            <Plus size={18} /> Yeni Ekle
-          </button>
+          {selectedIds.length > 0 ? (
+            <div className="flex bg-danger-light p-2 rounded gap-4" style={{ border: '1px solid var(--danger)', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
+               <span style={{ fontWeight: 600, color: 'var(--danger)', alignSelf: 'center' }}>{selectedIds.length} Seçili</span>
+               <button className="btn btn-outline" style={{ color: 'initial', borderColor: 'var(--success)' }} onClick={() => exportToExcel(true)}>
+                 <Download size={18} /> İndir
+               </button>
+               <button className="btn btn-outline" style={{ color: 'white', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => {
+                 if(confirm(`${selectedIds.length} kaydı tamamen silmek istediğinize emin misiniz?`)){
+                   useStore.getState().bulkDeleteNotes(selectedIds);
+                   setSelectedIds([]);
+                 }
+               }}>
+                 <Trash2 size={18} /> Sil
+               </button>
+            </div>
+          ) : (
+            <>
+              <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
+              <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload size={18} /> İçe Aktar
+              </button>
+              <button className="btn btn-outline" onClick={() => exportToExcel(false)} style={{ color: 'var(--status-resolved)' }}>
+                <Download size={18} /> Excel'e Aktar
+              </button>
+              <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
+                <BookOpen size={18} /> Serbest Defter
+              </button>
+              <button className="btn btn-primary" onClick={handleAddNewRow}>
+                <Plus size={18} /> Yeni Ekle
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -232,31 +260,48 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid-container mb-4" style={{ padding: '1rem' }}>
-        <div className="flex gap-4 items-center">
-          <div className="flex-1" style={{ position: 'relative' }}>
+      <div className="grid-container mb-4" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex-1" style={{ position: 'relative', minWidth: '250px' }}>
             <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Mağaza, satıcı veya konu ara..." 
+              placeholder="Mağaza, kişi veya konu ara..." 
               style={{ paddingLeft: '2.5rem' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
+          <div className="flex items-center gap-2" style={{ background: 'var(--bg-hover)', padding: '0.4rem', borderRadius: '0.4rem' }}>
+            <Filter size={16} style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }} />
+            <input 
+              type="text" className="form-input" placeholder="Satıcı Filtresi..." 
+              style={{ width: '150px', background: 'var(--bg-app)' }} 
+              value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
+            />
+            <input 
+              type="date" className="form-input" title="Tarih Filtresi" 
+              style={{ width: '130px', background: 'var(--bg-app)' }} 
+              value={filterDate} onChange={e => setFilterDate(e.target.value)} 
+            />
+          </div>
+
           <select 
             className="form-select" 
             style={{ width: '200px' }}
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}
           >
-            <option value="all">Sadece Aktifler (Arşiv Hariç)</option>
+            <option value="all">Aktifler (Açıklar)</option>
             <option value="pending">Devam Edenler</option>
             <option value="resolved">Çözülenler</option>
             <option value="archived">Arşivlenenler</option>
           </select>
         </div>
+        
+        {selectedIds.length > 0 && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Birden fazla satır seçili. Yukarıdaki yeşil/kırmızı butonlarla çoklu işlem yapabilirsiniz.</div>}
       </div>
 
       {filteredNotes.length === 0 ? (
@@ -264,7 +309,7 @@ export function Dashboard() {
           <p>Kayıt bulunamadı. Lütfen filtreyi değiştirin veya Ekle butonuna basın.</p>
         </div>
       ) : (
-        <DataGrid notes={filteredNotes} />
+        <DataGrid notes={filteredNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
       )}
 
       <GlobalNotesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

@@ -281,3 +281,5 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
 
 @media (max-width: 768px) { .flex { flex-wrap: wrap; } div[style*="grid-template-columns: repeat(4, 1fr)"] { grid-template-columns: 1fr 1fr !important; } } 
 @media (max-width: 480px) { div[style*="grid-template-columns: repeat(4, 1fr)"] { grid-template-columns: 1fr !important; } .header { flex-direction: column; text-align: center; gap: 1rem; } .header .flex { justify-content: center; } .container-fluid { padding: 0.5rem; } }
+
+.truncate-text { display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } input[type="checkbox"].row-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--status-resolved); } 

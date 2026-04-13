@@ -3,7 +3,7 @@ import { type SellerNote } from '../types';
 import { useStore } from '../store/useStore';
 import { History, Bell, Mail, Trash2, CheckCircle2 } from 'lucide-react';
 
-export function DataGrid({ notes }: { notes: SellerNote[] }) {
+export function DataGrid({ notes, selectedIds = [], setSelectedIds }: { notes: SellerNote[], selectedIds?: string[], setSelectedIds?: Function }) {
   const { updateNote, deleteNote } = useStore();
   const [openHistoryId, setOpenHistoryId] = useState<string | null>(null);
   
@@ -83,6 +83,13 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
         <table className="data-table">
           <thead>
             <tr>
+              <th style={{ width: '40px', textAlign: 'center' }}>
+                <input 
+                  type="checkbox" className="row-checkbox"
+                  checked={notes.length > 0 && selectedIds.length === notes.length}
+                  onChange={(e) => setSelectedIds && setSelectedIds(e.target.checked ? notes.map(n => n.id) : [])}
+                />
+              </th>
               <th>Durum</th>
               {columns.map(c => <th key={c.id}>{c.label}</th>)}
               <th style={{ textAlign: 'center' }}>Bildirim</th>
@@ -94,6 +101,13 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
               const rowClass = note.status === 'archived' ? 'opacity-60' : '';
               return (
                 <tr key={note.id} className={rowClass}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input 
+                      type="checkbox" className="row-checkbox"
+                      checked={selectedIds?.includes(note.id)}
+                      onChange={(e) => setSelectedIds && setSelectedIds((prev: string[]) => e.target.checked ? [...prev, note.id] : prev.filter(id => id !== note.id))}
+                    />
+                  </td>
                   <td>
                     <select 
                       className="cell-select"
@@ -112,7 +126,7 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
                     const value = typeof rawValue === 'boolean' || Array.isArray(rawValue) ? '' : rawValue as React.ReactNode;
 
                     return (
-                      <td key={col.id} style={{ minWidth: col.width }}>
+                      <td key={col.id} style={{ minWidth: col.width, maxWidth: '150px' }}>
                         <div 
                           className="cell-wrapper"
                           onDoubleClick={() => {
@@ -134,8 +148,8 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
                               className="cell-input-active"
                             />
                           ) : (
-                            <div className="cell-content">
-                              {value}
+                            <div className="cell-content truncate-text" title={String(value || '')}>
+                              {col.type === 'date' && value ? new Date(value as string).toLocaleDateString('tr-TR') : value}
                             </div>
                           )}
                         </div>

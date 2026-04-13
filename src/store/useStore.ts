@@ -17,6 +17,7 @@ interface StoreState {
   addNote: (note: Omit<SellerNote, 'id'>) => Promise<void>;
   updateNote: (id: string, newValues: Partial<SellerNote>) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  bulkDeleteNotes: (ids: string[]) => Promise<void>;
   markReminderSent: (id: string) => Promise<void>;
   sharePanel: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
   removeShare: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
@@ -24,6 +25,8 @@ interface StoreState {
   checkAuth: () => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+let activeChannel: any = null;
 
 export const useStore = create<StoreState>((set, get) => ({
   notes: [],
@@ -50,12 +53,20 @@ export const useStore = create<StoreState>((set, get) => ({
          get().initWorkspaces(session.user.email!);
       } else {
          localStorage.removeItem('saticiUserEmail');
+         if (activeChannel) {
+            supabase.removeChannel(activeChannel);
+            activeChannel = null;
+         }
          set({ user: null, activeWorkspace: null, availableWorkspaces: [], notes: [] });
       }
     });
   },
 
   signOut: async () => {
+    if (activeChannel) {
+       supabase.removeChannel(activeChannel);
+       activeChannel = null;
+    }
     await supabase.auth.signOut();
     localStorage.removeItem('saticiUserEmail');
   },
@@ -98,6 +109,27 @@ export const useStore = create<StoreState>((set, get) => ({
       set({ notes: data as SellerNote[] });
     }
     set({ isLoading: false });
+
+    // Realtime Aboneliği
+    if (activeChannel) {
+       supabase.removeChannel(activeChannel);
+    }
+    
+    activeChannel = supabase.channel(`public:notes:${activeWorkspace}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `owner_email=eq.${activeWorkspace}` }, (payload) => {
+        const state = get();
+        if (payload.eventType === 'INSERT') {
+          // If not already fetched optimistically
+          if (!state.notes.find(n => n.id === payload.new.id)) {
+            set({ notes: [payload.new as SellerNote, ...state.notes] });
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          set({ notes: state.notes.map(n => n.id === payload.new.id ? (payload.new as SellerNote) : n) });
+        } else if (payload.eventType === 'DELETE') {
+          set({ notes: state.notes.filter(n => n.id !== payload.old.id) });
+        }
+      })
+      .subscribe();
   },
 
   fetchGlobalNote: async () => {
@@ -264,6 +296,16 @@ export const useStore = create<StoreState>((set, get) => ({
     
     if (error) {
       console.error('Remove Share Error:', error.message);
+    }
+  },
+
+  bulkDeleteNotes: async (ids: string[]) => {
+    set((state) => ({
+      notes: state.notes.filter((n) => !ids.includes(n.id))
+    }));
+    const { error } = await supabase.from('notes').delete().in('id', ids);
+    if (error) {
+      console.error('Supabase Bulk Delete Error:', error.message);
     }
   }
 }));
