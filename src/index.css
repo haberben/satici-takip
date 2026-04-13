@@ -135,8 +135,6 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
 /* Premium Grid Data Table */
 .data-table-wrapper {
   overflow-x: auto;
-  overflow-y: auto;
-  height: calc(100vh - 280px);
 }
 
 .data-table {
