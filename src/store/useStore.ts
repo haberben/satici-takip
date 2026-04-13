@@ -20,6 +20,9 @@ interface StoreState {
   markReminderSent: (id: string) => Promise<void>;
   sharePanel: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
   removeShare: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
+  user: any | null;
+  checkAuth: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -29,6 +32,33 @@ export const useStore = create<StoreState>((set, get) => ({
   isLoading: false,
   activeWorkspace: null,
   availableWorkspaces: [],
+  user: null,
+
+  checkAuth: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if(session?.user) {
+        set({ user: session.user });
+        get().initWorkspaces(session.user.email!);
+    } else {
+        set({ user: null });
+    }
+    
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if(session?.user) {
+         localStorage.setItem('saticiUserEmail', session.user.email!);
+         set({ user: session.user });
+         get().initWorkspaces(session.user.email!);
+      } else {
+         localStorage.removeItem('saticiUserEmail');
+         set({ user: null, activeWorkspace: null, availableWorkspaces: [], notes: [] });
+      }
+    });
+  },
+
+  signOut: async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('saticiUserEmail');
+  },
 
   initWorkspaces: async (userEmail: string) => {
     // Kendi hesabimiz her zaman var
@@ -150,7 +180,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!oldNote) return;
 
     // create history snapshot
-    const editorEmail = localStorage.getItem('saticiUserEmail') || 'Bilinmiyor';
+    const editorEmail = get().user?.email || 'Bilinmiyor';
     const historyItem: NoteHistory = {
       timestamp: new Date().toISOString(),
       previousState: { ...oldNote },

@@ -1,12 +1,12 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 
 export function Dashboard() {
-  const { notes, addNote, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel } = useStore();
-  const currentUserEmail = localStorage.getItem('saticiUserEmail');
+  const { notes, addNote, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
+  const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'resolved' | 'archived'>('all');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -152,11 +152,22 @@ export function Dashboard() {
               ))}
             </select>
          </div>
-         {activeWorkspace === currentUserEmail && (
-           <button className="btn btn-outline" onClick={handleShare}>
-             <Share2 size={18} /> Panelimi Paylaş
-           </button>
-         )}
+         <div className="flex items-center gap-4">
+           {activeWorkspace === currentUserEmail && (
+             <button className="btn btn-outline" onClick={handleShare}>
+               <Share2 size={18} /> Panelimi Paylaş
+             </button>
+           )}
+           <div style={{ paddingLeft: '1rem', borderLeft: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+               <User size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }}/> 
+               {currentUserEmail}
+             </span>
+             <button className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger)', padding: '0.4rem 0.8rem' }} onClick={signOut}>
+               <LogOut size={16} /> Çıkış
+             </button>
+           </div>
+         </div>
       </div>
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
