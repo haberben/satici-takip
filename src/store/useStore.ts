@@ -117,7 +117,13 @@ export const useStore = create<StoreState>((set, get) => ({
     const currentHist = oldNote.history || [];
     const newHistory = [historyItem, ...currentHist].slice(0, 5);
 
-    const updatedData = { ...newValues, history: newHistory };
+    // Çözüldü Otomasyonu
+    const payload = { ...newValues };
+    if (payload.status === 'resolved' && oldNote.status !== 'resolved') {
+      payload.solutionDate = new Date().toISOString().split('T')[0];
+    }
+
+    const updatedData = { ...payload, history: newHistory };
 
     set((state) => ({
       notes: state.notes.map((n) => n.id === id ? { ...n, ...updatedData } : n)

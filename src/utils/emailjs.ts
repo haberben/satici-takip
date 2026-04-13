@@ -15,8 +15,14 @@ export const sendReminderEmail = async (params: {
     return false;
   }
 
+  const to_email = localStorage.getItem('saticiUserEmail');
+  if (!to_email) return false;
+
   try {
-    const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, params, {
+    const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+      ...params,
+      to_email: to_email // Dynamically passed
+    }, {
       publicKey: PUBLIC_KEY,
     });
     console.log('Email Başarıyla Gönderildi: ', result.text);
