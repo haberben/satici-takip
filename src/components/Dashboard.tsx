@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen } from 'lucide-react';
+import { Plus, Search, BookOpen, Download } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 
 export function Dashboard() {
@@ -40,6 +40,35 @@ export function Dashboard() {
     });
   };
 
+  const exportToExcel = () => {
+    const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
+    const rows = filteredNotes.map(n => [
+      n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
+      n.storeName,
+      n.fromWhom,
+      n.sellerName,
+      n.phoneNumber,
+      n.subject,
+      n.subjectDetail,
+      n.productCount.toString(),
+      n.requestDate,
+      n.reminderDate || ''
+    ]);
+    
+    // TR karakterler icin UTF-8 BOM eklenerek dosya dizilimi (Excel uyumlu ; ayraci)
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+      + headers.join(';') + '\n' 
+      + rows.map(e => e.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+      
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `satici_notlari_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
   return (
     <div className="container-fluid">
       <div className="header">
@@ -48,11 +77,14 @@ export function Dashboard() {
           <p>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>
         </div>
         <div className="flex items-center gap-4">
+          <button className="btn btn-outline" onClick={exportToExcel} style={{ color: 'var(--status-resolved)' }}>
+            <Download size={18} /> Excel'e Aktar
+          </button>
           <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
             <BookOpen size={18} /> Serbest Defter
           </button>
           <button className="btn btn-primary" onClick={handleAddNewRow}>
-            <Plus size={18} /> Yeni Satır Ekle
+            <Plus size={18} /> Yeni Ekle
           </button>
         </div>
       </div>

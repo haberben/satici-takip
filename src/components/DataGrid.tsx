@@ -13,15 +13,15 @@ export function DataGrid({ notes }: { notes: SellerNote[] }) {
   const [showToast, setShowToast] = useState(false);
 
   const columns: { id: keyof SellerNote, width: string, type: string }[] = [
-    { id: 'storeName', width: '150px', type: 'text' },
-    { id: 'fromWhom', width: '150px', type: 'text' },
-    { id: 'sellerName', width: '150px', type: 'text' },
-    { id: 'phoneNumber', width: '130px', type: 'text' },
-    { id: 'subject', width: '180px', type: 'text' },
-    { id: 'subjectDetail', width: '250px', type: 'text' },
-    { id: 'productCount', width: '80px', type: 'number' },
-    { id: 'requestDate', width: '130px', type: 'date' },
-    { id: 'reminderDate', width: '180px', type: 'datetime-local' }
+    { id: 'storeName', width: '10%', type: 'text' },
+    { id: 'fromWhom', width: '10%', type: 'text' },
+    { id: 'sellerName', width: '10%', type: 'text' },
+    { id: 'phoneNumber', width: '10%', type: 'text' },
+    { id: 'subject', width: '14%', type: 'text' },
+    { id: 'subjectDetail', width: '15%', type: 'text' },
+    { id: 'productCount', width: '5%', type: 'number' },
+    { id: 'requestDate', width: '8%', type: 'date' },
+    { id: 'reminderDate', width: '10%', type: 'datetime-local' }
   ];
 
   const triggerToast = () => {

@@ -49,9 +49,9 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
 
 /* Layout Utilities */
 .container-fluid {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem 2rem;
 }
 .flex { display: flex; }
 .items-center { align-items: center; }
