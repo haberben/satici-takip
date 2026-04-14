@@ -217,7 +217,7 @@ export const useStore = create<StoreState>((set, get) => ({
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', globalNoteId);
     } else {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('global_notes')
         .insert([{ content, owner_email: activeWorkspace }])
         .select()
