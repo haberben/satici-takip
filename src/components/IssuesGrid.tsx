@@ -103,7 +103,7 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
                             className="cell-input-active"
                           />
                         ) : (
-                          <div className="cell-content truncate-text" title={String(value || '')} style={{ whiteSpace: 'normal', maxHeight: '4.5rem', WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', whiteSpace: 'pre-wrap' }}>
+                          <div className="cell-content truncate-text" title={String(value || '')} style={{ maxHeight: '4.5rem', WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', whiteSpace: 'pre-wrap' }}>
                             {col.type === 'date' && value ? new Date(value as string).toLocaleDateString('tr-TR') : value}
                           </div>
                         )}
