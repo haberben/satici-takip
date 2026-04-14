@@ -222,7 +222,9 @@ export const useStore = create<StoreState>((set, get) => ({
         .insert([{ content, owner_email: activeWorkspace }])
         .select()
         .single();
-      if (data) {
+      if (error) {
+        console.error('Supabase Global Note Insert Error:', error.message);
+      } else if (data) {
         set({ globalNoteId: data.id });
       }
     }
@@ -370,6 +372,8 @@ export const useStore = create<StoreState>((set, get) => ({
 
     const issueData = {
       ...issue,
+      notifyBrowser: issue.notifyBrowser ?? true,
+      notifyEmail: issue.notifyEmail ?? false,
       owner_email: activeWorkspace
     };
 

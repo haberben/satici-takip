@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type IssueNote } from '../types';
 import { useStore } from '../store/useStore';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Bell, Mail } from 'lucide-react';
 
 export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issues: IssueNote[], selectedIds?: string[], setSelectedIds?: Function }) {
   const { updateIssue, deleteIssue } = useStore();
@@ -48,6 +48,7 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
             </th>
             <th style={{ width: '150px' }}>Durum</th>
             {columns.map(c => <th key={c.id} style={{ width: c.width }}>{c.label}</th>)}
+            <th style={{ textAlign: 'center', width: '80px' }}>Bildirim</th>
             <th style={{ textAlign: 'right', width: '50px' }}>İşlem</th>
           </tr>
         </thead>
@@ -111,6 +112,25 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
                     </td>
                   );
                 })}
+
+                <td style={{ textAlign: 'center' }}>
+                  <div className="flex gap-2 justify-center py-2">
+                    <button 
+                      title="Tarayıcı Bildirimi"
+                      onClick={() => updateIssue(issue.id, { notifyBrowser: !issue.notifyBrowser })}
+                      style={{ opacity: issue.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <Bell size={16} />
+                    </button>
+                    <button 
+                      title="E-posta Bildirimi"
+                      onClick={() => updateIssue(issue.id, { notifyEmail: !issue.notifyEmail })}
+                      style={{ opacity: issue.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <Mail size={16} />
+                    </button>
+                  </div>
+                </td>
 
                 <td style={{ textAlign: 'right', padding: '0 1rem' }}>
                   <button 

@@ -51,6 +51,8 @@ export interface IssueNote {
   status: IssueStatus;
   reminder_date?: string;
   reminder_sent?: boolean;
+  notifyBrowser?: boolean;
+  notifyEmail?: boolean;
   owner_email?: string;
   created_at?: string;
 }

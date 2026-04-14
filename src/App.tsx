@@ -148,10 +148,23 @@ function App() {
         if (issue.status === 'pending' && issue.reminder_date && !issue.reminder_sent) {
           const reminderTime = new Date(issue.reminder_date);
           if (now >= reminderTime) {
-            sendNotification(`Sorun Hatırlatıcı`, {
-              body: `${issue.issue_text.substring(0, 50)}...`,
-              icon: '/vite.svg'
-            });
+            
+            if (issue.notifyBrowser !== false) {
+              sendNotification(`Sorun Hatırlatıcı`, {
+                body: `${issue.issue_text.substring(0, 50)}...`,
+                icon: '/vite.svg'
+              });
+            }
+
+            if (issue.notifyEmail === true) {
+              sendReminderEmail({
+                store_name: "SİSTEM BİLDİRİMİ (Sorun Yönetimi)",
+                subject: issue.issue_text.substring(0, 50),
+                phone_number: "-",
+                seller_name: "Sistem Kaydı",
+              });
+            }
+
             markIssueReminderSent(issue.id);
           }
         }
