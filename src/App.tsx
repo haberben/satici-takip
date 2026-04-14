@@ -75,7 +75,7 @@ function LoginScreen() {
 }
 
 function App() {
-  const { notes, markReminderSent, checkAuth, user } = useStore();
+  const { notes, markReminderSent, issues, markIssueReminderSent, globalNote, updateGlobalNote, checkAuth, user } = useStore();
 
   useEffect(() => {
     checkAuth();
@@ -87,12 +87,13 @@ function App() {
     // Hatırlatıcı kontrolcüsü
     const interval = setInterval(() => {
       const now = new Date();
+      
+      // 1. Seller Notes
       notes.forEach((note) => {
         if (note.status === 'pending' && note.reminderDate && !note.reminderSent) {
           const reminderTime = new Date(note.reminderDate);
           if (now >= reminderTime) {
             
-            // Kullanıcı tercihine göre bildirim gönder (Varsayılan olarak Browser True)
             if (note.notifyBrowser !== false) {
               sendNotification(`Hatırlatma: ${note.storeName}`, {
                 body: `${note.subject} (Satıcı: ${note.sellerName}) - ${note.phoneNumber}`,
@@ -100,7 +101,6 @@ function App() {
               });
             }
 
-            // Kullanıcı tercihine göre e-mail gönder
             if (note.notifyEmail === true) {
               sendReminderEmail({
                 store_name: note.storeName,
@@ -110,15 +110,57 @@ function App() {
               });
             }
 
-            // Sistemde tekrar hatırlatılmasını engelle
             markReminderSent(note.id);
           }
         }
       });
+      
+      // 2. Global Notes (Serbest Defter)
+      try {
+        if (globalNote && globalNote.trim().startsWith('[')) {
+          let updated = false;
+          const items = JSON.parse(globalNote);
+          const newItems = items.map((item: any) => {
+            if (item.reminderDate && !item.reminderSent) {
+              const rTime = new Date(item.reminderDate);
+              if (now >= rTime) {
+                sendNotification(`Not Hatırlatıcı`, {
+                  body: item.text,
+                  icon: '/vite.svg'
+                });
+                updated = true;
+                return { ...item, reminderSent: true };
+              }
+            }
+            return item;
+          });
+          
+          if (updated) {
+            updateGlobalNote(JSON.stringify(newItems));
+          }
+        }
+      } catch (e) {
+        console.error("Global Notes parse error for reminders", e);
+      }
+      
+      // 3. Issues Notes
+      issues.forEach((issue) => {
+        if (issue.status === 'pending' && issue.reminder_date && !issue.reminder_sent) {
+          const reminderTime = new Date(issue.reminder_date);
+          if (now >= reminderTime) {
+            sendNotification(`Sorun Hatırlatıcı`, {
+              body: `${issue.issue_text.substring(0, 50)}...`,
+              icon: '/vite.svg'
+            });
+            markIssueReminderSent(issue.id);
+          }
+        }
+      });
+      
     }, 1000 * 10);
 
     return () => clearInterval(interval);
-  }, [notes, markReminderSent]);
+  }, [notes, markReminderSent, issues, markIssueReminderSent, globalNote, updateGlobalNote, user]);
   if (!user) {
     return <LoginScreen />;
   }

@@ -6,6 +6,8 @@ interface GlobalNoteItem {
   id: string;
   text: string;
   date: string;
+  reminderDate?: string;
+  reminderSent?: boolean;
 }
 
 export function GlobalNotesSidebar({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
@@ -95,9 +97,23 @@ export function GlobalNotesSidebar({ isOpen, onClose }: { isOpen: boolean, onClo
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                     {new Date(item.date).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <button onClick={() => removeItem(item.id)} className="btn-icon" style={{ padding: '2px', color: 'var(--danger)' }}>
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex gap-2">
+                    <input 
+                      type="datetime-local" 
+                      className="form-input" 
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', width: 'auto' }}
+                      value={item.reminderDate || ''}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        const newItems = items.map(i => i.id === item.id ? { ...i, reminderDate: newDate, reminderSent: false } : i);
+                        commitItems(newItems);
+                      }}
+                      title="Hatırlatıcı Ekle"
+                    />
+                    <button onClick={() => removeItem(item.id)} className="btn-icon" style={{ padding: '2px', color: 'var(--danger)' }}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', whiteSpace: 'pre-wrap' }}>{item.text}</p>
               </div>

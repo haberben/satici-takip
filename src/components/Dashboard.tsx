@@ -3,10 +3,12 @@ import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
 import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
+import { IssuesGrid } from './IssuesGrid';
 
 export function Dashboard() {
-  const { notes, addNote, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
+  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
+  const [mode, setMode] = useState<'seller' | 'issues'>('seller');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterSeller, setFilterSeller] = useState('');
@@ -40,25 +42,48 @@ export function Dashboard() {
     return isMatch && note.status === filter;
   });
 
-  const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
+  const filteredIssues = issues.filter(issue => {
+    const matchesSearch = 
+      issue.issue_text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      issue.solution_text.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = filterDate ? issue.created_at === filterDate : true;
+    
+    const isMatch = matchesSearch && matchesDate;
+    if (filter === 'all') return isMatch && issue.status !== 'archived';
+    return isMatch && issue.status === filter;
+  });
+
+  const currentDataLength = mode === 'seller' ? filteredNotes.length : filteredIssues.length;
+  const totalPages = Math.ceil(currentDataLength / itemsPerPage);
   const paginatedNotes = filteredNotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedIssues = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleAddNewRow = () => {
-    addNote({
-      storeName: 'Yeni Mağaza',
-      fromWhom: '',
-      subject: '',
-      subjectDetail: '',
-      productCount: 1,
-      sellerName: '',
-      phoneNumber: '',
-      solution: '',
-      requestDate: new Date().toISOString().split('T')[0],
-      status: 'pending',
-      notifyBrowser: true,
-      notifyEmail: false,
-      internalNote: ''
-    });
+    if (mode === 'seller') {
+      addNote({
+        storeName: 'Yeni Mağaza',
+        fromWhom: '',
+        subject: '',
+        subjectDetail: '',
+        productCount: 1,
+        sellerName: '',
+        phoneNumber: '',
+        solution: '',
+        requestDate: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        notifyBrowser: true,
+        notifyEmail: false,
+        internalNote: ''
+      });
+    } else {
+      addIssue({
+        issue_text: 'Yeni Sorun (Düzenlemek için çift tıkla)',
+        solution_text: '',
+        status: 'pending',
+        created_at: new Date().toISOString().split('T')[0]
+      });
+    }
   };
 
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,34 +142,57 @@ export function Dashboard() {
   };
 
   const exportToExcel = (onlySelected: boolean = false) => {
-    const dataToExport = onlySelected ? notes.filter(n => selectedIds.includes(n.id)) : filteredNotes;
-    const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'İç Not', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
-    const rows = dataToExport.map(n => [
-      n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
-      n.storeName,
-      n.fromWhom,
-      n.sellerName,
-      n.phoneNumber,
-      n.subject,
-      n.subjectDetail,
-      n.internalNote || '',
-      n.productCount.toString(),
-      n.requestDate,
-      n.reminderDate || ''
-    ]);
-    
-    // TR karakterler icin UTF-8 BOM eklenerek dosya dizilimi (Excel uyumlu ; ayraci)
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-      + headers.join(';') + '\n' 
-      + rows.map(e => e.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+    if (mode === 'seller') {
+      const dataToExport = onlySelected ? notes.filter(n => selectedIds.includes(n.id)) : filteredNotes;
+      const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'İç Not', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
+      const rows = dataToExport.map(n => [
+        n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
+        n.storeName,
+        n.fromWhom,
+        n.sellerName,
+        n.phoneNumber,
+        n.subject,
+        n.subjectDetail,
+        n.internalNote || '',
+        n.productCount.toString(),
+        n.requestDate,
+        n.reminderDate || ''
+      ]);
       
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `satici_notlari_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+        + headers.join(';') + '\n' 
+        + rows.map(e => e.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+        
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `satici_notlari_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } else {
+      const dataToExport = onlySelected ? issues.filter(i => selectedIds.includes(i.id)) : filteredIssues;
+      const headers = ['Durum', 'İlgili Sorun', 'Uygulanan Çözüm', 'Tarih', 'Hatırlatıcı'];
+      const rows = dataToExport.map(i => [
+        i.status === 'resolved' ? 'Çözüldü' : i.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
+        i.issue_text,
+        i.solution_text,
+        i.created_at || '',
+        i.reminder_date || ''
+      ]);
+      
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+        + headers.join(';') + '\n' 
+        + rows.map(e => e.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+        
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `sorunlar_ve_cozumler_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
   };
 
   const handleShare = () => {
@@ -197,8 +245,26 @@ export function Dashboard() {
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px' }}>Satıcı & Mağaza Yönetim Paneli</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.</p>
+          <div className="flex gap-4 mb-2">
+            <button 
+              className={`btn ${mode === 'seller' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => { setMode('seller'); setSelectedIds([]); setCurrentPage(1); }}
+            >
+              Satıcı Takip Modeli
+            </button>
+            <button 
+              className={`btn ${mode === 'issues' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => { setMode('issues'); setSelectedIds([]); setCurrentPage(1); }}
+            >
+              Sorunlar & Çözümler
+            </button>
+          </div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px', marginTop: '0.5rem' }}>
+            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : 'Ar-Ge & Sorun Yönetimi'}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {mode === 'seller' ? 'Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.' : 'Karşılaşılan sorunları raporlayın ve çözüm yollarını arşivleyin.'}
+          </p>
           <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>Genel Çözüm İlerlemesi</span>
             <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-color)' }}>%{progress}</span>
@@ -216,7 +282,11 @@ export function Dashboard() {
                </button>
                <button className="btn btn-outline" style={{ color: 'white', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => {
                  if(confirm(`${selectedIds.length} kaydı tamamen silmek istediğinize emin misiniz?`)){
-                   useStore.getState().bulkDeleteNotes(selectedIds);
+                   if (mode === 'seller') {
+                     useStore.getState().bulkDeleteNotes(selectedIds);
+                   } else {
+                     useStore.getState().bulkDeleteIssues(selectedIds);
+                   }
                    setSelectedIds([]);
                  }
                }}>
@@ -225,10 +295,12 @@ export function Dashboard() {
             </div>
           ) : (
             <>
-              <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
-              <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
-                <Upload size={18} /> İçe Aktar
-              </button>
+              {mode === 'seller' && <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />}
+              {mode === 'seller' && (
+                <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+                  <Upload size={18} /> İçe Aktar
+                </button>
+              )}
               <button className="btn btn-outline" onClick={() => exportToExcel(false)} style={{ color: 'var(--status-resolved)' }}>
                 <Download size={18} /> Excel'e Aktar
               </button>
@@ -269,7 +341,7 @@ export function Dashboard() {
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Mağaza, kişi veya konu ara..." 
+              placeholder={mode === 'seller' ? "Mağaza, kişi veya konu ara..." : "Sorun veya çözüm metni ara..."} 
               style={{ paddingLeft: '2.5rem' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -278,11 +350,13 @@ export function Dashboard() {
           
           <div className="flex items-center gap-2" style={{ background: 'var(--bg-hover)', padding: '0.4rem', borderRadius: '0.4rem' }}>
             <Filter size={16} style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }} />
-            <input 
-              type="text" className="form-input" placeholder="Satıcı Filtresi..." 
-              style={{ width: '150px', background: 'var(--bg-app)' }} 
-              value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
-            />
+            {mode === 'seller' && (
+              <input 
+                type="text" className="form-input" placeholder="Satıcı Filtresi..." 
+                style={{ width: '150px', background: 'var(--bg-app)' }} 
+                value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
+              />
+            )}
             <input 
               type="date" className="form-input" title="Tarih Filtresi" 
               style={{ width: '130px', background: 'var(--bg-app)' }} 
@@ -306,13 +380,17 @@ export function Dashboard() {
         {selectedIds.length > 0 && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Birden fazla satır seçili. Yukarıdaki yeşil/kırmızı butonlarla çoklu işlem yapabilirsiniz.</div>}
       </div>
 
-      {filteredNotes.length === 0 ? (
+      {currentDataLength === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
           <p>Kayıt bulunamadı. Lütfen filtreyi değiştirin veya Ekle butonuna basın.</p>
         </div>
       ) : (
         <>
-          <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+          {mode === 'seller' ? (
+            <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+          ) : (
+            <IssuesGrid issues={paginatedIssues} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+          )}
           
           <div className="flex justify-between items-center mb-4" style={{ padding: '0.75rem 1rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
             <div className="flex items-center gap-2">

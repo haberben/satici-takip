@@ -42,3 +42,16 @@ export interface PanelShare {
   shared_with_email: string;
 }
 
+export type IssueStatus = 'pending' | 'resolved' | 'archived';
+
+export interface IssueNote {
+  id: string;
+  issue_text: string;
+  solution_text: string;
+  status: IssueStatus;
+  reminder_date?: string;
+  reminder_sent?: boolean;
+  owner_email?: string;
+  created_at?: string;
+}
+

@@ -98,9 +98,12 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds }: { notes: S
           </thead>
           <tbody>
             {notes.map(note => {
-              const rowClass = note.status === 'archived' ? 'opacity-60' : '';
+              let rowClass = note.status === 'archived' ? 'opacity-60' : '';
+              if (note.status === 'resolved') rowClass += ' row-bg-resolved';
+              if (note.status === 'pending') rowClass += ' row-bg-pending';
+              
               return (
-                <tr key={note.id} className={rowClass}>
+                <tr key={note.id} className={rowClass.trim()}>
                   <td style={{ textAlign: 'center' }}>
                     <input 
                       type="checkbox" className="row-checkbox"

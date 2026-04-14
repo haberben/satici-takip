@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { type SellerNote, type NoteHistory } from '../types';
+import { type SellerNote, type NoteHistory, type IssueNote } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface StoreState {
@@ -24,9 +24,19 @@ interface StoreState {
   user: any | null;
   checkAuth: () => Promise<void>;
   signOut: () => Promise<void>;
+  
+  // Issues
+  issues: IssueNote[];
+  fetchIssues: () => Promise<void>;
+  addIssue: (issue: Omit<IssueNote, 'id'>) => Promise<void>;
+  updateIssue: (id: string, newValues: Partial<IssueNote>) => Promise<void>;
+  deleteIssue: (id: string) => Promise<void>;
+  bulkDeleteIssues: (ids: string[]) => Promise<void>;
+  markIssueReminderSent: (id: string) => Promise<void>;
 }
 
 let activeChannel: any = null;
+let activeIssueChannel: any = null;
 
 export const useStore = create<StoreState>((set, get) => ({
   notes: [],
@@ -36,6 +46,7 @@ export const useStore = create<StoreState>((set, get) => ({
   activeWorkspace: null,
   availableWorkspaces: [],
   user: null,
+  issues: [],
 
   checkAuth: async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -57,7 +68,11 @@ export const useStore = create<StoreState>((set, get) => ({
             supabase.removeChannel(activeChannel);
             activeChannel = null;
          }
-         set({ user: null, activeWorkspace: null, availableWorkspaces: [], notes: [] });
+         if (activeIssueChannel) {
+            supabase.removeChannel(activeIssueChannel);
+            activeIssueChannel = null;
+         }
+         set({ user: null, activeWorkspace: null, availableWorkspaces: [], notes: [], issues: [] });
       }
     });
   },
@@ -66,6 +81,10 @@ export const useStore = create<StoreState>((set, get) => ({
     if (activeChannel) {
        supabase.removeChannel(activeChannel);
        activeChannel = null;
+    }
+    if (activeIssueChannel) {
+       supabase.removeChannel(activeIssueChannel);
+       activeIssueChannel = null;
     }
     await supabase.auth.signOut();
     localStorage.removeItem('saticiUserEmail');
@@ -87,11 +106,13 @@ export const useStore = create<StoreState>((set, get) => ({
     
     set({ availableWorkspaces: workspaces, activeWorkspace: userEmail });
     get().fetchNotes();
+    get().fetchIssues();
   },
 
   setActiveWorkspace: (workspaceEmail: string) => {
     set({ activeWorkspace: workspaceEmail });
     get().fetchNotes();
+    get().fetchIssues();
   },
 
   fetchNotes: async () => {
@@ -127,6 +148,40 @@ export const useStore = create<StoreState>((set, get) => ({
           set({ notes: state.notes.map(n => n.id === payload.new.id ? (payload.new as SellerNote) : n) });
         } else if (payload.eventType === 'DELETE') {
           set({ notes: state.notes.filter(n => n.id !== payload.old.id) });
+        }
+      })
+      .subscribe();
+  },
+
+  fetchIssues: async () => {
+    const { activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
+    const { data, error } = await supabase
+      .from('issues')
+      .select('*')
+      .eq('owner_email', activeWorkspace)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      set({ issues: data as IssueNote[] });
+    }
+
+    if (activeIssueChannel) {
+       supabase.removeChannel(activeIssueChannel);
+    }
+    
+    activeIssueChannel = supabase.channel(`public:issues:${activeWorkspace}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'issues', filter: `owner_email=eq.${activeWorkspace}` }, (payload) => {
+        const state = get();
+        if (payload.eventType === 'INSERT') {
+          if (!state.issues.find(i => i.id === payload.new.id)) {
+            set({ issues: [payload.new as IssueNote, ...state.issues] });
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          set({ issues: state.issues.map(i => i.id === payload.new.id ? (payload.new as IssueNote) : i) });
+        } else if (payload.eventType === 'DELETE') {
+          set({ issues: state.issues.filter(i => i.id !== payload.old.id) });
         }
       })
       .subscribe();
@@ -307,5 +362,89 @@ export const useStore = create<StoreState>((set, get) => ({
     if (error) {
       console.error('Supabase Bulk Delete Error:', error.message);
     }
+  },
+
+  addIssue: async (issue) => {
+    const { activeWorkspace } = get();
+    if (!activeWorkspace) return;
+
+    const issueData = {
+      ...issue,
+      owner_email: activeWorkspace
+    };
+
+    const tempId = crypto.randomUUID();
+    const newIssue = { ...issueData, id: tempId } as IssueNote;
+    set((state) => ({ issues: [newIssue, ...state.issues] }));
+
+    const { data, error } = await supabase
+      .from('issues')
+      .insert([issueData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase Insert Error (Issue):', error.message);
+      set((state) => ({ issues: state.issues.filter(i => i.id !== tempId) }));
+    } else if (data) {
+      set((state) => ({
+        issues: state.issues.map(i => i.id === tempId ? (data as IssueNote) : i)
+      }));
+    }
+  },
+
+  updateIssue: async (id, newValues) => {
+    set((state) => ({
+      issues: state.issues.map((i) => i.id === id ? { ...i, ...newValues } : i)
+    }));
+
+    const { error } = await supabase
+      .from('issues')
+      .update(newValues)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase Update Error (Issue):', error.message);
+    }
+  },
+
+  deleteIssue: async (id) => {
+    set((state) => ({
+      issues: state.issues.filter((i) => i.id !== id)
+    }));
+
+    const { error } = await supabase
+      .from('issues')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase Delete Error (Issue):', error.message);
+    }
+  },
+
+  bulkDeleteIssues: async (ids) => {
+    set((state) => ({
+      issues: state.issues.filter((i) => !ids.includes(i.id))
+    }));
+    const { error } = await supabase.from('issues').delete().in('id', ids);
+    if (error) {
+      console.error('Supabase Bulk Delete Error (Issue):', error.message);
+    }
+  },
+
+  markIssueReminderSent: async (id) => {
+    set((state) => ({
+      issues: state.issues.map((i) => i.id === id ? { ...i, reminder_sent: true } : i)
+    }));
+
+    const { error } = await supabase
+      .from('issues')
+      .update({ reminder_sent: true })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Supabase markIssueReminderSent Error:', error.message);
+    }
   }
-}));
+})); 

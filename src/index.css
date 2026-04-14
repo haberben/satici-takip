@@ -20,6 +20,9 @@
   --danger: #e00;
   --success: #0070f3;
   
+  --row-bg-pending: rgba(239, 68, 68, 0.05); /* Harfiyen kırmızı tonu */
+  --row-bg-resolved: rgba(34, 197, 94, 0.1); /* Hafif yeşil */
+  
   --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
   --shadow-md: 0 8px 30px rgba(0,0,0,0.04);
   --shadow-lg: 0 12px 24px rgba(0,0,0,0.08);
@@ -163,6 +166,14 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
   position: relative;
   background: var(--bg-panel);
   transition: background-color 0.1s ease;
+}
+
+.data-table tr.row-bg-pending td {
+  background: var(--row-bg-pending) !important;
+}
+
+.data-table tr.row-bg-resolved td {
+  background: var(--row-bg-resolved) !important;
 }
 
 .data-table tr:hover td {
