@@ -107,12 +107,14 @@ export const useStore = create<StoreState>((set, get) => ({
     set({ availableWorkspaces: workspaces, activeWorkspace: userEmail });
     get().fetchNotes();
     get().fetchIssues();
+    get().fetchGlobalNote();
   },
 
   setActiveWorkspace: (workspaceEmail: string) => {
     set({ activeWorkspace: workspaceEmail });
     get().fetchNotes();
     get().fetchIssues();
+    get().fetchGlobalNote();
   },
 
   fetchNotes: async () => {
