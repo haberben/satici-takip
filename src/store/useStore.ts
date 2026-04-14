@@ -195,11 +195,11 @@ export const useStore = create<StoreState>((set, get) => ({
       .from('global_notes')
       .select('*')
       .eq('owner_email', activeWorkspace)
-      .limit(1)
-      .single();
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
-    if (!error && data) {
-      set({ globalNote: data.content, globalNoteId: data.id });
+    if (!error && data && data.length > 0) {
+      set({ globalNote: data[0].content, globalNoteId: data[0].id });
     } else {
       set({ globalNote: '', globalNoteId: null });
     }
