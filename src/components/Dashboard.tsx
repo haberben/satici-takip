@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter, BarChart3 } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 import { IssuesGrid } from './IssuesGrid';
+import { ReportingPanel } from './ReportingPanel';
 
 export function Dashboard() {
   const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
-  const [mode, setMode] = useState<'seller' | 'issues'>('seller');
+  const [mode, setMode] = useState<'seller' | 'issues' | 'reports'>('seller');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterSeller, setFilterSeller] = useState('');
@@ -258,12 +259,19 @@ export function Dashboard() {
             >
               Sorunlar & Çözümler
             </button>
+            <button 
+              className={`btn ${mode === 'reports' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => { setMode('reports'); setSelectedIds([]); setCurrentPage(1); }}
+              style={mode === 'reports' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none' } : {}}
+            >
+              <BarChart3 size={16} /> Raporlama
+            </button>
           </div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px', marginTop: '0.5rem' }}>
-            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : 'Ar-Ge & Sorun Yönetimi'}
+            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & İstatistikler'}
           </h1>
           <p style={{ color: 'var(--text-secondary)' }}>
-            {mode === 'seller' ? 'Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.' : 'Karşılaşılan sorunları raporlayın ve çözüm yollarını arşivleyin.'}
+            {mode === 'seller' ? 'Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.' : mode === 'issues' ? 'Karşılaşılan sorunları raporlayın ve çözüm yollarını arşivleyin.' : 'Detaylı analizler, grafikler ve profesyonel raporlar.'}
           </p>
           <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>Genel Çözüm İlerlemesi</span>
@@ -273,6 +281,7 @@ export function Dashboard() {
             <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'linear-gradient(90deg, var(--primary-color), var(--accent-light))', width: `${progress}%`, transition: 'width 0.5s ease' }}></div>
           </div>
         </div>
+        {mode !== 'reports' && (
         <div className="flex items-center gap-4 flex-wrap" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
           {selectedIds.length > 0 ? (
             <div className="flex bg-danger-light p-2 rounded gap-4" style={{ border: '1px solid var(--danger)', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
@@ -313,129 +322,136 @@ export function Dashboard() {
             </>
           )}
         </div>
+        )}
       </div>
 
-      <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-          <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{activeCount}</p>
-        </div>
-        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-pending)' }}>
-          <h3 style={{ marginBottom: '0.5rem' }}>Devam Eden</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-pending)' }}>{pendingCount}</p>
-        </div>
-        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-resolved)' }}>
-          <h3 style={{ marginBottom: '0.5rem' }}>Çözülen</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
-        </div>
-        <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-archived)' }}>
-          <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
-          <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{archivedCount}</p>
-        </div>
-      </div>
-
-      <div className="grid-container mb-4" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div className="flex gap-4 items-center flex-wrap">
-          <div className="flex-1" style={{ position: 'relative', minWidth: '250px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder={mode === 'seller' ? "Mağaza, kişi veya konu ara..." : "Sorun veya çözüm metni ara..."} 
-              style={{ paddingLeft: '2.5rem' }}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex items-center gap-2" style={{ background: 'var(--bg-hover)', padding: '0.4rem', borderRadius: '0.4rem' }}>
-            <Filter size={16} style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }} />
-            {mode === 'seller' && (
-              <input 
-                type="text" className="form-input" placeholder="Satıcı Filtresi..." 
-                style={{ width: '150px', background: 'var(--bg-app)' }} 
-                value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
-              />
-            )}
-            <input 
-              type="date" className="form-input" title="Tarih Filtresi" 
-              style={{ width: '130px', background: 'var(--bg-app)' }} 
-              value={filterDate} onChange={e => setFilterDate(e.target.value)} 
-            />
-          </div>
-
-          <select 
-            className="form-select" 
-            style={{ width: '200px' }}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-          >
-            <option value="all">Aktifler (Açıklar)</option>
-            <option value="pending">Devam Edenler</option>
-            <option value="resolved">Çözülenler</option>
-            <option value="archived">Arşivlenenler</option>
-          </select>
-        </div>
-        
-        {selectedIds.length > 0 && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Birden fazla satır seçili. Yukarıdaki yeşil/kırmızı butonlarla çoklu işlem yapabilirsiniz.</div>}
-      </div>
-
-      {currentDataLength === 0 ? (
-        <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
-          <p>Kayıt bulunamadı. Lütfen filtreyi değiştirin veya Ekle butonuna basın.</p>
-        </div>
+      {mode === 'reports' ? (
+        <ReportingPanel />
       ) : (
         <>
-          {mode === 'seller' ? (
-            <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
-          ) : (
-            <IssuesGrid issues={paginatedIssues} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
-          )}
-          
-          <div className="flex justify-between items-center mb-4" style={{ padding: '0.75rem 1rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
-            <div className="flex items-center gap-2">
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sayfa Başına Gösterim:</span>
-              <select 
-                className="form-select" 
-                style={{ width: '80px', padding: '0.3rem' }} 
-                value={itemsPerPage} 
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setItemsPerPage(val);
-                  localStorage.setItem('saticiItemsPerPage', val.toString());
-                  setCurrentPage(1);
-                }}
-              >
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={250}>250</option>
-                <option value={1000}>1000</option>
-              </select>
+          <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
+              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{activeCount}</p>
             </div>
-
-            <div className="flex items-center gap-4">
-              <button 
-                className="btn btn-outline" 
-                disabled={currentPage === 1} 
-                onClick={() => setCurrentPage(p => p - 1)}
-                style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
-              >
-                Önceki
-              </button>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                Sayfa {currentPage} / {Math.max(1, totalPages)}
-              </span>
-              <button 
-                className="btn btn-outline" 
-                disabled={currentPage >= totalPages} 
-                onClick={() => setCurrentPage(p => p + 1)}
-                style={{ opacity: currentPage >= totalPages ? 0.5 : 1 }}
-              >
-                Sonraki
-              </button>
+            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-pending)' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>Devam Eden</h3>
+              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-pending)' }}>{pendingCount}</p>
+            </div>
+            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-resolved)' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>Çözülen</h3>
+              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
+            </div>
+            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-archived)' }}>
+              <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
+              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{archivedCount}</p>
             </div>
           </div>
+
+          <div className="grid-container mb-4" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="flex-1" style={{ position: 'relative', minWidth: '250px' }}>
+                <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder={mode === 'seller' ? "Mağaza, kişi veya konu ara..." : "Sorun veya çözüm metni ara..."} 
+                  style={{ paddingLeft: '2.5rem' }}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-center gap-2" style={{ background: 'var(--bg-hover)', padding: '0.4rem', borderRadius: '0.4rem' }}>
+                <Filter size={16} style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }} />
+                {mode === 'seller' && (
+                  <input 
+                    type="text" className="form-input" placeholder="Satıcı Filtresi..." 
+                    style={{ width: '150px', background: 'var(--bg-app)' }} 
+                    value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
+                  />
+                )}
+                <input 
+                  type="date" className="form-input" title="Tarih Filtresi" 
+                  style={{ width: '130px', background: 'var(--bg-app)' }} 
+                  value={filterDate} onChange={e => setFilterDate(e.target.value)} 
+                />
+              </div>
+
+              <select 
+                className="form-select" 
+                style={{ width: '200px' }}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as any)}
+              >
+                <option value="all">Aktifler (Açıklar)</option>
+                <option value="pending">Devam Edenler</option>
+                <option value="resolved">Çözülenler</option>
+                <option value="archived">Arşivlenenler</option>
+              </select>
+            </div>
+            
+            {selectedIds.length > 0 && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Birden fazla satır seçili. Yukarıdaki yeşil/kırmızı butonlarla çoklu işlem yapabilirsiniz.</div>}
+          </div>
+
+          {currentDataLength === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
+              <p>Kayıt bulunamadı. Lütfen filtreyi değiştirin veya Ekle butonuna basın.</p>
+            </div>
+          ) : (
+            <>
+              {mode === 'seller' ? (
+                <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+              ) : (
+                <IssuesGrid issues={paginatedIssues} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+              )}
+              
+              <div className="flex justify-between items-center mb-4" style={{ padding: '0.75rem 1rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sayfa Başına Gösterim:</span>
+                  <select 
+                    className="form-select" 
+                    style={{ width: '80px', padding: '0.3rem' }} 
+                    value={itemsPerPage} 
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setItemsPerPage(val);
+                      localStorage.setItem('saticiItemsPerPage', val.toString());
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={250}>250</option>
+                    <option value={1000}>1000</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <button 
+                    className="btn btn-outline" 
+                    disabled={currentPage === 1} 
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+                  >
+                    Önceki
+                  </button>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                    Sayfa {currentPage} / {Math.max(1, totalPages)}
+                  </span>
+                  <button 
+                    className="btn btn-outline" 
+                    disabled={currentPage >= totalPages} 
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    style={{ opacity: currentPage >= totalPages ? 0.5 : 1 }}
+                  >
+                    Sonraki
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
