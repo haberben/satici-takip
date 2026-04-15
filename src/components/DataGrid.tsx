@@ -1,9 +1,17 @@
 import { useState } from 'react';
 import { type SellerNote } from '../types';
 import { useStore } from '../store/useStore';
+import { type ColumnDef } from '../utils/useColumnConfig';
 import { History, Bell, Mail, Trash2, CheckCircle2 } from 'lucide-react';
 
-export function DataGrid({ notes, selectedIds = [], setSelectedIds }: { notes: SellerNote[], selectedIds?: string[], setSelectedIds?: Function }) {
+interface DataGridProps {
+  notes: SellerNote[];
+  selectedIds?: string[];
+  setSelectedIds?: Function;
+  visibleColumns: ColumnDef[];
+}
+
+export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColumns }: DataGridProps) {
   const { updateNote, deleteNote } = useStore();
   const [openHistoryId, setOpenHistoryId] = useState<string | null>(null);
   
@@ -12,18 +20,8 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds }: { notes: S
   const [editValue, setEditValue] = useState<any>('');
   const [showToast, setShowToast] = useState(false);
 
-  const columns: { id: keyof SellerNote, width: string, type: string, label: string }[] = [
-    { id: 'storeName', width: '10%', type: 'text', label: 'Mağaza Adı' },
-    { id: 'fromWhom', width: '10%', type: 'text', label: 'Kimden Geldiği' },
-    { id: 'sellerName', width: '10%', type: 'text', label: 'Satıcı Adı' },
-    { id: 'phoneNumber', width: '10%', type: 'text', label: 'Cep No' },
-    { id: 'subject', width: '12%', type: 'text', label: 'Konu' },
-    { id: 'subjectDetail', width: '12%', type: 'text', label: 'Konu Detay' },
-    { id: 'internalNote', width: '12%', type: 'text', label: 'Ekstra Not (İç)' },
-    { id: 'productCount', width: '5%', type: 'number', label: 'Adet' },
-    { id: 'requestDate', width: '9%', type: 'date', label: 'Talep Tarihi' },
-    { id: 'reminderDate', width: '10%', type: 'datetime-local', label: 'Hatırlatıcı' }
-  ];
+  // Use visibleColumns from config instead of hardcoded
+  const columns = visibleColumns;
 
   const triggerToast = () => {
     setShowToast(true);

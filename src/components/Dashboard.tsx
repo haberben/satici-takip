@@ -5,6 +5,8 @@ import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2,
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 import { IssuesGrid } from './IssuesGrid';
 import { ReportingPanel } from './ReportingPanel';
+import { ColumnSettingsPanel } from './ColumnSettingsPanel';
+import { useColumnConfig } from '../utils/useColumnConfig';
 
 export function Dashboard() {
   const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
@@ -22,6 +24,7 @@ export function Dashboard() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const columnConfig = useColumnConfig();
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
   const resolvedCount = notes.filter(n => n.status === 'resolved').length;
@@ -145,20 +148,20 @@ export function Dashboard() {
   const exportToExcel = (onlySelected: boolean = false) => {
     if (mode === 'seller') {
       const dataToExport = onlySelected ? notes.filter(n => selectedIds.includes(n.id)) : filteredNotes;
-      const headers = ['Durum', 'Mağaza Adı', 'Kimden Geldiği', 'Satıcı Adı', 'Cep No', 'Konu', 'Konu Detay', 'İç Not', 'Adet', 'Talep Tarihi', 'Hatırlatıcı'];
-      const rows = dataToExport.map(n => [
-        n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi',
-        n.storeName,
-        n.fromWhom,
-        n.sellerName,
-        n.phoneNumber,
-        n.subject,
-        n.subjectDetail,
-        n.internalNote || '',
-        n.productCount.toString(),
-        n.requestDate,
-        n.reminderDate || ''
-      ]);
+      // Use custom column labels from config — visible columns in their configured order
+      const exportCols = columnConfig.visibleColumns;
+      const headers = ['Durum', ...exportCols.map(c => c.label)];
+      const rows = dataToExport.map(n => {
+        const statusLabel = n.status === 'resolved' ? 'Çözüldü' : n.status === 'pending' ? 'Devam Ediyor' : 'Arşivlendi';
+        const colValues = exportCols.map(col => {
+          const val = n[col.id as keyof typeof n];
+          if (val === null || val === undefined) return '';
+          if (typeof val === 'boolean') return val ? 'Evet' : 'Hayır';
+          if (Array.isArray(val)) return '';
+          return String(val);
+        });
+        return [statusLabel, ...colValues];
+      });
       
       let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
         + headers.join(';') + '\n' 
@@ -313,6 +316,15 @@ export function Dashboard() {
               <button className="btn btn-outline" onClick={() => exportToExcel(false)} style={{ color: 'var(--status-resolved)' }}>
                 <Download size={18} /> Excel'e Aktar
               </button>
+              {mode === 'seller' && (
+                <ColumnSettingsPanel
+                  columns={columnConfig.columns}
+                  renameColumn={columnConfig.renameColumn}
+                  toggleColumn={columnConfig.toggleColumn}
+                  moveColumn={columnConfig.moveColumn}
+                  resetColumns={columnConfig.resetColumns}
+                />
+              )}
               <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
                 <BookOpen size={18} /> Serbest Defter
               </button>
@@ -401,7 +413,7 @@ export function Dashboard() {
           ) : (
             <>
               {mode === 'seller' ? (
-                <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
+                <DataGrid notes={paginatedNotes} selectedIds={selectedIds} setSelectedIds={setSelectedIds} visibleColumns={columnConfig.visibleColumns} />
               ) : (
                 <IssuesGrid issues={paginatedIssues} selectedIds={selectedIds} setSelectedIds={setSelectedIds} />
               )}
