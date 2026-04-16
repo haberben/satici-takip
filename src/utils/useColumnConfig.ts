@@ -24,7 +24,8 @@ export const DEFAULT_COLUMNS: ColumnDef[] = [
   { id: 'internalNote', label: 'Ekstra Not (İç)',   defaultLabel: 'Ekstra Not (İç)',  width: '12%', type: 'text',           visible: true, order: 6 },
   { id: 'productCount', label: 'Adet',              defaultLabel: 'Adet',             width: '5%',  type: 'number',         visible: true, order: 7 },
   { id: 'requestDate',  label: 'Talep Tarihi',      defaultLabel: 'Talep Tarihi',     width: '9%',  type: 'date',           visible: true, order: 8 },
-  { id: 'reminderDate', label: 'Hatırlatıcı',       defaultLabel: 'Hatırlatıcı',      width: '10%', type: 'datetime-local', visible: true, order: 9 },
+  { id: 'solutionDate', label: 'Çözüm Tarihi',      defaultLabel: 'Çözüm Tarihi',     width: '9%',  type: 'date',           visible: true, order: 9 },
+  { id: 'reminderDate', label: 'Hatırlatıcı',       defaultLabel: 'Hatırlatıcı',      width: '10%', type: 'datetime-local', visible: true, order: 10 },
 ];
 
 function loadConfig(): ColumnDef[] {

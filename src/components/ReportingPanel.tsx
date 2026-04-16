@@ -240,7 +240,7 @@ function LineChart({ data, color, height = 140 }: { data: { label: string; value
 
 // ── Main Component ──
 export function ReportingPanel() {
-  const { notes } = useStore();
+  const { notes, globalNote } = useStore();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [personFilter, setPersonFilter] = useState('');
@@ -462,16 +462,23 @@ export function ReportingPanel() {
     pptx.subject = 'Dönemsel İstatistik Raporu';
 
     // ── Theme Colors ──
-    const DARK_BG = '1a1a2e';
-    const CARD_BG = '16213e';
-    const ACCENT = '0f3460';
+    const DARK_BG = 'ffffff'; // Idefix için beyaz arka plan
+    const CARD_BG = 'f8f9fa'; // Çok açık gri
+    const ACCENT = '005CAA';  // Idefix Mavi
     const HIGHLIGHT = '533483';
-    const GOLD = 'e94560';
-    const WHITE = 'ffffff';
-    const LIGHT = 'cccccc';
+    const GOLD = 'FE0000';    // Idefix Kırmızı
+    const WHITE = '000000';   // Koyu metin rengi siyah
+    const LIGHT = '555555';   // İkincil metin rengi koyu gri
     const GREEN = '2ecc71';
     const ORANGE = 'f39c12';
     const BLUE = '3498db';
+
+    // ── Logo Helper ──
+    const addLogo = (slide: any) => {
+      // Slaytın sağ üst köşesine Idefix kurumsal renkleriyle logomsu metin
+      slide.addShape(pptx.ShapeType.oval, { x: 8.5, y: 0.35, w: 0.15, h: 0.15, fill: { type: 'solid', color: GOLD } });
+      slide.addText('idefix', { x: 8.7, y: 0.25, w: 1.2, h: 0.4, fontSize: 16, color: ACCENT, bold: true, fontFace: 'Arial' });
+    };
 
     // ── Slide 1: Cover ──
     const slide1 = pptx.addSlide();
@@ -479,12 +486,15 @@ export function ReportingPanel() {
     slide1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: '100%', fill: { type: 'solid', color: DARK_BG } });
     // Accent bar
     slide1.addShape(pptx.ShapeType.rect, { x: 0, y: 2.2, w: 0.15, h: 1.5, fill: { type: 'solid', color: GOLD } });
-    slide1.addText('Satıcı Talep\nRaporlama', { x: 0.5, y: 1.8, w: 9, h: 2, fontSize: 36, color: WHITE, bold: true, fontFace: 'Segoe UI', lineSpacingMultiple: 1.2 });
+    slide1.addText('Satıcı Talep\nRaporlama', { x: 0.5, y: 1.8, w: 9, h: 2, fontSize: 36, color: ACCENT, bold: true, fontFace: 'Segoe UI', lineSpacingMultiple: 1.2 });
     slide1.addText(`Rapor Dönemi: ${dateFrom || 'Başlangıç'} — ${dateTo || 'Bugüne'}`, { x: 0.5, y: 3.6, w: 9, h: 0.5, fontSize: 14, color: LIGHT, fontFace: 'Segoe UI' });
     slide1.addText(`Oluşturulma: ${new Date().toLocaleDateString('tr-TR')}`, { x: 0.5, y: 4.1, w: 9, h: 0.5, fontSize: 12, color: LIGHT, fontFace: 'Segoe UI' });
     slide1.addText(personFilter ? `Kişi Filtresi: ${personFilter}` : 'Tüm Kişiler', { x: 0.5, y: 4.5, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI', bold: true });
+    
+    // Kapak sayfası büyük logo
+    slide1.addShape(pptx.ShapeType.oval, { x: 6.8, y: 1.8, w: 0.6, h: 0.6, fill: { type: 'solid', color: GOLD } });
+    slide1.addText('idefix', { x: 7.5, y: 1.5, w: 4, h: 1.5, fontSize: 56, color: ACCENT, bold: true, fontFace: 'Arial' });
 
-    // ── Slide 2: Genel Bakış ──
     const slide2 = pptx.addSlide();
     slide2.background = { color: DARK_BG };
     slide2.addText('Genel Bakış', { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, color: WHITE, bold: true, fontFace: 'Segoe UI' });
@@ -599,13 +609,33 @@ export function ReportingPanel() {
       slide5.addText(s.count.toString(), { x: 3.5 + barW + 0.15, y, w: 1, h: 0.35, fontSize: 10, color: subjColors[i % subjColors.length], bold: true, fontFace: 'Segoe UI', valign: 'middle' });
     });
 
-    // ── Slide 6: Summary ──
+    // Eklenen slaytlara Logo koyuyoruz
+    addLogo(slide2);
+    addLogo(slide3);
+    addLogo(slide4);
+    addLogo(slide5);
+
+    // ── Slide 6: Serbest Defter (Önemli Notlar) ──
     const slide6 = pptx.addSlide();
     slide6.background = { color: DARK_BG };
-    slide6.addShape(pptx.ShapeType.rect, { x: 0, y: 2.0, w: 0.15, h: 1.5, fill: { type: 'solid', color: GOLD } });
-    slide6.addText('Teşekkürler', { x: 0.5, y: 1.8, w: 9, h: 1, fontSize: 36, color: WHITE, bold: true, fontFace: 'Segoe UI' });
-    slide6.addText('Bu rapor Satıcı Takip Sistemi tarafından otomatik oluşturulmuştur.', { x: 0.5, y: 3.0, w: 9, h: 0.6, fontSize: 14, color: LIGHT, fontFace: 'Segoe UI' });
-    slide6.addText(`Rapor Tarih: ${new Date().toLocaleDateString('tr-TR')} • Toplam ${stats.total} Kayıt Analiz Edildi`, { x: 0.5, y: 3.6, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI' });
+    slide6.addText('Önemli Notlar / Serbest Defter', { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, color: ACCENT, bold: true, fontFace: 'Segoe UI' });
+    slide6.addShape(pptx.ShapeType.rect, { x: 0.5, y: 0.85, w: 2, h: 0.04, fill: { type: 'solid', color: GOLD } });
+    
+    slide6.addText(globalNote || 'Henüz görünürde veya serbest defterde önemli bir not bulunmamaktadır.', {
+        x: 0.5, y: 1.2, w: 9, h: 4, 
+        fontSize: 14, color: WHITE, 
+        valign: 'top', fontFace: 'Segoe UI' 
+    });
+    addLogo(slide6);
+
+    // ── Slide 7: Summary ──
+    const slide7 = pptx.addSlide();
+    slide7.background = { color: DARK_BG };
+    slide7.addShape(pptx.ShapeType.rect, { x: 0, y: 2.0, w: 0.15, h: 1.5, fill: { type: 'solid', color: GOLD } });
+    slide7.addText('Teşekkürler', { x: 0.5, y: 1.8, w: 9, h: 1, fontSize: 36, color: ACCENT, bold: true, fontFace: 'Segoe UI' });
+    slide7.addText('Bu rapor Satıcı Takip Sistemi tarafından otomatik oluşturulmuştur.', { x: 0.5, y: 3.0, w: 9, h: 0.6, fontSize: 14, color: LIGHT, fontFace: 'Segoe UI' });
+    slide7.addText(`Rapor Tarih: ${new Date().toLocaleDateString('tr-TR')} • Toplam ${stats.total} Kayıt Analiz Edildi`, { x: 0.5, y: 3.6, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI' });
+    addLogo(slide7);
 
     pptx.writeFile({ fileName: `Satici_Sunum_${new Date().toISOString().split('T')[0]}.pptx` });
   };
