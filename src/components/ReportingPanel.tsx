@@ -281,6 +281,7 @@ export function ReportingPanel() {
     const resolved = filteredNotes.filter(n => n.status === 'resolved').length;
     const archived = filteredNotes.filter(n => n.status === 'archived').length;
     const total = filteredNotes.length;
+    const totalProducts = filteredNotes.reduce((sum, n) => sum + (Number(n.productCount) || 1), 0);
     const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
 
     // Average resolution time (days)
@@ -295,7 +296,7 @@ export function ReportingPanel() {
     });
     const avgResolutionDays = resolvedWithDates > 0 ? Math.round(totalDays / resolvedWithDates * 10) / 10 : 0;
 
-    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays };
+    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, totalProducts };
   }, [filteredNotes]);
 
   // ── Person Statistics ──
@@ -390,6 +391,7 @@ export function ReportingPanel() {
       ['Arşivlenen', stats.archived],
       ['Çözüm Oranı (%)', stats.resolutionRate],
       ['Ort. Çözüm Süresi (Gün)', stats.avgResolutionDays],
+      ['İşlem Gören Ürün Adedi', stats.totalProducts],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     ws1['!cols'] = [{ wpx: 200 }, { wpx: 150 }];
@@ -516,15 +518,19 @@ export function ReportingPanel() {
     });
 
     // Extra info
-    slide2.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 3.3, w: 4.5, h: 1.2, fill: { type: 'solid', color: CARD_BG }, rectRadius: 0.15 });
+    slide2.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 3.1, w: 4.8, h: 1.6, fill: { type: 'solid', color: CARD_BG }, rectRadius: 0.15 });
     slide2.addText([
       { text: 'Ort. Çözüm Süresi: ', options: { color: LIGHT, fontSize: 14, fontFace: 'Segoe UI' } },
       { text: `${stats.avgResolutionDays} gün`, options: { color: GREEN, fontSize: 14, bold: true, fontFace: 'Segoe UI' } },
-    ], { x: 0.8, y: 3.5, w: 4, h: 0.4 });
+    ], { x: 0.8, y: 3.3, w: 4, h: 0.4 });
     slide2.addText([
       { text: 'Arşivlenen: ', options: { color: LIGHT, fontSize: 14, fontFace: 'Segoe UI' } },
       { text: stats.archived.toString(), options: { color: LIGHT, fontSize: 14, bold: true, fontFace: 'Segoe UI' } },
-    ], { x: 0.8, y: 3.9, w: 4, h: 0.4 });
+    ], { x: 0.8, y: 3.7, w: 4, h: 0.4 });
+    slide2.addText([
+      { text: 'İşlem Gören Ürün: ', options: { color: LIGHT, fontSize: 16, fontFace: 'Segoe UI' } },
+      { text: `${stats.totalProducts} Adet`, options: { color: ACCENT, fontSize: 16, bold: true, fontFace: 'Segoe UI' } },
+    ], { x: 0.8, y: 4.1, w: 4, h: 0.4 });
 
     // ── Slide 3: Kişi Bazlı ──
     const slide3 = pptx.addSlide();
