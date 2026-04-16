@@ -477,9 +477,10 @@ export function ReportingPanel() {
 
     // ── Logo Helper ──
     const addLogo = (slide: any) => {
-      // Slaytın sağ üst köşesine Idefix kurumsal renkleriyle logomsu metin
-      slide.addShape(pptx.ShapeType.ellipse, { x: 8.5, y: 0.35, w: 0.15, h: 0.15, fill: { type: 'solid', color: GOLD } });
-      slide.addText('idefix', { x: 8.7, y: 0.25, w: 1.2, h: 0.4, fontSize: 16, color: ACCENT, bold: true, fontFace: 'Arial' });
+      // Slaytın sağ üst köşesine Idefix 'i' simgesi ve yazısı
+      slide.addShape(pptx.ShapeType.ellipse, { x: 8.3, y: 0.25, w: 0.15, h: 0.15, fill: { type: 'solid', color: GOLD } });
+      slide.addShape(pptx.ShapeType.parallelogram, { x: 8.28, y: 0.43, w: 0.18, h: 0.25, fill: { type: 'solid', color: ACCENT } });
+      slide.addText('idefix', { x: 8.55, y: 0.28, w: 1.2, h: 0.4, fontSize: 18, color: ACCENT, bold: true, fontFace: 'Arial' });
     };
 
     // ── Slide 1: Cover ──
@@ -494,8 +495,9 @@ export function ReportingPanel() {
     slide1.addText(personFilter ? `Kişi Filtresi: ${personFilter}` : 'Tüm Kişiler', { x: 0.5, y: 4.5, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI', bold: true });
     
     // Kapak sayfası büyük logo
-    slide1.addShape(pptx.ShapeType.ellipse, { x: 6.8, y: 1.8, w: 0.6, h: 0.6, fill: { type: 'solid', color: GOLD } });
-    slide1.addText('idefix', { x: 7.5, y: 1.5, w: 4, h: 1.5, fontSize: 56, color: ACCENT, bold: true, fontFace: 'Arial' });
+    slide1.addShape(pptx.ShapeType.ellipse, { x: 6.8, y: 1.5, w: 0.6, h: 0.6, fill: { type: 'solid', color: GOLD } });
+    slide1.addShape(pptx.ShapeType.parallelogram, { x: 6.75, y: 2.2, w: 0.7, h: 1.0, fill: { type: 'solid', color: ACCENT } });
+    slide1.addText('idefix', { x: 7.6, y: 1.8, w: 4, h: 1.5, fontSize: 60, color: ACCENT, bold: true, fontFace: 'Arial' });
 
     const slide2 = pptx.addSlide();
     slide2.background = { color: DARK_BG };
@@ -621,13 +623,30 @@ export function ReportingPanel() {
     addLogo(slide4);
     addLogo(slide5);
 
+    // ── Global Note JSON Parse ──
+    let parsedNotesText = 'Henüz görünürde veya serbest defterde önemli bir not bulunmamaktadır.';
+    if (globalNote) {
+      try {
+        if (globalNote.trim().startsWith('[')) {
+          const parsed = JSON.parse(globalNote);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsedNotesText = parsed.map((item: any) => `• ${item.text}`).join('\n\n');
+          }
+        } else {
+          parsedNotesText = globalNote;
+        }
+      } catch(e) {
+        parsedNotesText = globalNote;
+      }
+    }
+
     // ── Slide 6: Serbest Defter (Önemli Notlar) ──
     const slide6 = pptx.addSlide();
     slide6.background = { color: DARK_BG };
     slide6.addText('Önemli Notlar / Serbest Defter', { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, color: ACCENT, bold: true, fontFace: 'Segoe UI' });
     slide6.addShape(pptx.ShapeType.rect, { x: 0.5, y: 0.85, w: 2, h: 0.04, fill: { type: 'solid', color: GOLD } });
     
-    slide6.addText(globalNote || 'Henüz görünürde veya serbest defterde önemli bir not bulunmamaktadır.', {
+    slide6.addText(parsedNotesText, {
         x: 0.5, y: 1.2, w: 9, h: 4, 
         fontSize: 14, color: WHITE, 
         valign: 'top', fontFace: 'Segoe UI' 
