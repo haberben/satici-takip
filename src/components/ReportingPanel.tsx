@@ -476,7 +476,7 @@ export function ReportingPanel() {
     // ── Logo Helper ──
     const addLogo = (slide: any) => {
       // Slaytın sağ üst köşesine Idefix kurumsal renkleriyle logomsu metin
-      slide.addShape(pptx.ShapeType.oval, { x: 8.5, y: 0.35, w: 0.15, h: 0.15, fill: { type: 'solid', color: GOLD } });
+      slide.addShape(pptx.ShapeType.ellipse, { x: 8.5, y: 0.35, w: 0.15, h: 0.15, fill: { type: 'solid', color: GOLD } });
       slide.addText('idefix', { x: 8.7, y: 0.25, w: 1.2, h: 0.4, fontSize: 16, color: ACCENT, bold: true, fontFace: 'Arial' });
     };
 
@@ -492,7 +492,7 @@ export function ReportingPanel() {
     slide1.addText(personFilter ? `Kişi Filtresi: ${personFilter}` : 'Tüm Kişiler', { x: 0.5, y: 4.5, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI', bold: true });
     
     // Kapak sayfası büyük logo
-    slide1.addShape(pptx.ShapeType.oval, { x: 6.8, y: 1.8, w: 0.6, h: 0.6, fill: { type: 'solid', color: GOLD } });
+    slide1.addShape(pptx.ShapeType.ellipse, { x: 6.8, y: 1.8, w: 0.6, h: 0.6, fill: { type: 'solid', color: GOLD } });
     slide1.addText('idefix', { x: 7.5, y: 1.5, w: 4, h: 1.5, fontSize: 56, color: ACCENT, bold: true, fontFace: 'Arial' });
 
     const slide2 = pptx.addSlide();
