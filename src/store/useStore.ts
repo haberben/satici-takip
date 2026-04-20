@@ -242,7 +242,8 @@ export const useStore = create<StoreState>((set, get) => ({
       notifyEmail: note.notifyEmail ?? false,
       history: [],
       owner_email: activeWorkspace,
-      internalNote: ''
+      internalNote: '',
+      startTime: new Date().toISOString()
     };
 
     const tempId = crypto.randomUUID();
@@ -286,6 +287,11 @@ export const useStore = create<StoreState>((set, get) => ({
     const payload = { ...newValues };
     if (payload.status === 'resolved' && oldNote.status !== 'resolved') {
       payload.solutionDate = new Date().toISOString().split('T')[0];
+      if (oldNote.startTime) {
+        const start = new Date(oldNote.startTime).getTime();
+        const end = new Date().getTime();
+        payload.durationMinutes = Math.round((end - start) / (1000 * 60));
+      }
     }
 
     const updatedData = { ...payload, history: newHistory };
@@ -376,7 +382,8 @@ export const useStore = create<StoreState>((set, get) => ({
       ...issue,
       notifyBrowser: issue.notifyBrowser ?? true,
       notifyEmail: issue.notifyEmail ?? false,
-      owner_email: activeWorkspace
+      owner_email: activeWorkspace,
+      startTime: new Date().toISOString()
     };
 
     const tempId = crypto.randomUUID();
@@ -400,13 +407,23 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   updateIssue: async (id, newValues) => {
+    const oldIssue = get().issues.find(i => i.id === id);
+    const payload = { ...newValues };
+    if (payload.status === 'resolved' && oldIssue && oldIssue.status !== 'resolved') {
+      if (oldIssue.startTime) {
+        const start = new Date(oldIssue.startTime).getTime();
+        const end = new Date().getTime();
+        payload.durationMinutes = Math.round((end - start) / (1000 * 60));
+      }
+    }
+
     set((state) => ({
-      issues: state.issues.map((i) => i.id === id ? { ...i, ...newValues } : i)
+      issues: state.issues.map((i) => i.id === id ? { ...i, ...payload } : i)
     }));
 
     const { error } = await supabase
       .from('issues')
-      .update(newValues)
+      .update(payload)
       .eq('id', id);
 
     if (error) {

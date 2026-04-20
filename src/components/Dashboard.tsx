@@ -12,6 +12,14 @@ export function Dashboard() {
   const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const [mode, setMode] = useState<'seller' | 'issues' | 'reports'>('seller');
+  
+  const normalizeTurkish = (str: string) => {
+    if (!str) return '';
+    return str
+      .replace(/İ/g, 'i')
+      .replace(/I/g, 'ı')
+      .toLowerCase();
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterSeller, setFilterSeller] = useState('');
@@ -33,15 +41,17 @@ export function Dashboard() {
   const progress = Math.round((resolvedCount / Math.max(activeCount, 1)) * 100);
 
   const filteredNotes = notes.filter(note => {
+    const s = normalizeTurkish(searchTerm);
     const matchesSearch = 
-      note.storeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      note.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.fromWhom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      normalizeTurkish(note.storeName).includes(s) || 
+      normalizeTurkish(note.sellerName).includes(s) ||
+      normalizeTurkish(note.fromWhom).includes(s) ||
+      normalizeTurkish(note.subject).includes(s);
       
+    const fs = normalizeTurkish(filterSeller);
     const matchesSeller = filterSeller
-      ? note.sellerName.toLowerCase().includes(filterSeller.toLowerCase()) ||
-        note.fromWhom.toLowerCase().includes(filterSeller.toLowerCase())
+      ? normalizeTurkish(note.sellerName).includes(fs) ||
+        normalizeTurkish(note.fromWhom).includes(fs)
       : true;
     const matchesDate = filterDate ? note.requestDate === filterDate : true;
     
@@ -51,9 +61,10 @@ export function Dashboard() {
   });
 
   const filteredIssues = issues.filter(issue => {
+    const s = normalizeTurkish(searchTerm);
     const matchesSearch = 
-      issue.issue_text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.solution_text.toLowerCase().includes(searchTerm.toLowerCase());
+      normalizeTurkish(issue.issue_text).includes(s) ||
+      normalizeTurkish(issue.solution_text).includes(s);
     
     const matchesDate = filterDate ? issue.created_at === filterDate : true;
     

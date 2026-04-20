@@ -27,6 +27,8 @@ export interface SellerNote {
   history?: NoteHistory[];
   created_at?: string;
   owner_email?: string;
+  startTime?: string;
+  durationMinutes?: number;
 }
 
 export interface GlobalNote {
@@ -55,5 +57,7 @@ export interface IssueNote {
   notifyEmail?: boolean;
   owner_email?: string;
   created_at?: string;
+  startTime?: string;
+  durationMinutes?: number;
 }
 

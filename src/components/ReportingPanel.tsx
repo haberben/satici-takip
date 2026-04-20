@@ -275,6 +275,13 @@ export function ReportingPanel() {
     });
   }, [notes, dateFrom, dateTo, personFilter]);
 
+  const formatDuration = (mins: number) => {
+    if (mins < 60) return `${mins} dk`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m > 0 ? `${h} sa ${m} dk` : `${h} sa`;
+  };
+
   // ── Statistics ──
   const stats = useMemo(() => {
     const pending = filteredNotes.filter(n => n.status === 'pending').length;
@@ -288,15 +295,28 @@ export function ReportingPanel() {
     let totalDays = 0;
     let resolvedWithDates = 0;
     filteredNotes.forEach(n => {
-      if (n.status === 'resolved' && n.solutionDate && n.requestDate) {
-        const diff = new Date(n.solutionDate).getTime() - new Date(n.requestDate).getTime();
-        totalDays += diff / (1000 * 60 * 60 * 24);
+      if (n.status === 'resolved' && (n.durationMinutes !== undefined || (n.solutionDate && n.requestDate))) {
+        const days = n.durationMinutes !== undefined 
+          ? n.durationMinutes / (60 * 24)
+          : (new Date(n.solutionDate!).getTime() - new Date(n.requestDate!).getTime()) / (1000 * 60 * 60 * 24);
+        totalDays += days;
         resolvedWithDates++;
       }
     });
     const avgResolutionDays = resolvedWithDates > 0 ? Math.round(totalDays / resolvedWithDates * 10) / 10 : 0;
 
-    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, totalProducts };
+    // Average resolution time (minutes)
+    let totalMins = 0;
+    let resolvedWithMins = 0;
+    filteredNotes.forEach(n => {
+      if (n.status === 'resolved' && n.durationMinutes !== undefined) {
+        totalMins += n.durationMinutes;
+        resolvedWithMins++;
+      }
+    });
+    const avgResolutionMins = resolvedWithMins > 0 ? Math.round(totalMins / resolvedWithMins) : 0;
+
+    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, avgResolutionMins, totalProducts };
   }, [filteredNotes]);
 
   // ── Person Statistics ──
@@ -392,6 +412,7 @@ export function ReportingPanel() {
       ['Arşivlenen', stats.archived],
       ['Çözüm Oranı (%)', stats.resolutionRate],
       ['Ort. Çözüm Süresi (Gün)', stats.avgResolutionDays],
+      ['Ort. Çözüm Süresi (Saat/Dakika)', stats.avgResolutionMins > 0 ? formatDuration(stats.avgResolutionMins) : '-'],
       ['İşlem Gören Ürün Adedi', stats.totalProducts],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
@@ -523,8 +544,9 @@ export function ReportingPanel() {
     // Extra info
     slide2.addShape(pptx.ShapeType.roundRect, { x: 0.5, y: 3.1, w: 4.8, h: 1.6, fill: { type: 'solid', color: CARD_BG }, rectRadius: 0.15 });
     slide2.addText([
-      { text: 'Ort. Çözüm Süresi: ', options: { color: LIGHT, fontSize: 14, fontFace: 'Segoe UI' } },
-      { text: `${stats.avgResolutionDays} gün`, options: { color: GREEN, fontSize: 14, bold: true, fontFace: 'Segoe UI' } },
+      { text: 'Ort. Çözüm Süresi: ', options: { color: LIGHT, fontSize: 13, fontFace: 'Segoe UI' } },
+      { text: `${stats.avgResolutionDays} gün`, options: { color: GREEN, fontSize: 13, bold: true, fontFace: 'Segoe UI' } },
+      { text: stats.avgResolutionMins > 0 ? ` (${formatDuration(stats.avgResolutionMins)})` : '', options: { color: GREEN, fontSize: 13, fontFace: 'Segoe UI' } },
     ], { x: 0.8, y: 3.3, w: 4, h: 0.4 });
     slide2.addText([
       { text: 'Arşivlenen: ', options: { color: LIGHT, fontSize: 14, fontFace: 'Segoe UI' } },
@@ -788,8 +810,10 @@ export function ReportingPanel() {
               <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #10b981, #34d399)' }} />
             </div>
             <div className="kpi-card">
-              <div className="kpi-value" style={{ color: '#8b5cf6' }}>{stats.avgResolutionDays}</div>
-              <div className="kpi-label">Ort. Çözüm (Gün)</div>
+              <div className="kpi-value" style={{ color: '#8b5cf6', fontSize: stats.avgResolutionMins > 0 ? '1.5rem' : '1.8rem' }}>
+                {stats.avgResolutionMins > 0 ? formatDuration(stats.avgResolutionMins) : (stats.avgResolutionDays + ' gün')}
+              </div>
+              <div className="kpi-label">Ort. Çözüm</div>
               <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)' }} />
             </div>
           </div>
