@@ -364,12 +364,13 @@ export function ReportingPanel() {
       .slice(0, 10);
   }, [filteredNotes]);
 
-  // ── Unique person names for filter ──
+  // ── Unique person names for filter (fromWhom + sellerName + storeName) ──
   const uniquePersons = useMemo(() => {
     const set = new Set<string>();
     notes.forEach(n => {
       if (n.fromWhom) set.add(n.fromWhom);
       if (n.sellerName) set.add(n.sellerName);
+      if (n.storeName) set.add(n.storeName);
     });
     return Array.from(set).sort();
   }, [notes]);
@@ -568,33 +569,45 @@ export function ReportingPanel() {
       rowH: 0.4,
     });
 
-    // ── Slide 4: Zaman Çizelgesi ──
-    const slide4 = pptx.addSlide();
-    slide4.background = { color: DARK_BG };
-    slide4.addText('Zaman Çizelgesi', { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, color: WHITE, bold: true, fontFace: 'Segoe UI' });
-    slide4.addShape(pptx.ShapeType.rect, { x: 0.5, y: 0.85, w: 2, h: 0.04, fill: { type: 'solid', color: GOLD } });
+    // ── Slide 4+: Zaman Çizelgesi (tüm tarihler, her slayta 15 satır) ──
+    const ROWS_PER_SLIDE = 15;
+    const timeSlideCount = Math.max(1, Math.ceil(timelineStats.length / ROWS_PER_SLIDE));
+    const timeSlides: any[] = [];
 
-    const timeRows: any[][] = [
-      [
-        { text: 'Tarih', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
-        { text: 'Toplam', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
-        { text: 'Devam Eden', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
-        { text: 'Çözülen', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
-      ],
-      ...timelineStats.slice(-12).map((ts, i) => [
-        { text: ts.date, options: { color: WHITE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
-        { text: ts.count.toString(), options: { color: BLUE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI', bold: true } },
-        { text: ts.pending.toString(), options: { color: ORANGE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
-        { text: ts.resolved.toString(), options: { color: GREEN, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
-      ])
-    ];
+    for (let si = 0; si < timeSlideCount; si++) {
+      const slicedStats = timelineStats.slice(si * ROWS_PER_SLIDE, (si + 1) * ROWS_PER_SLIDE);
+      const tsSlide = pptx.addSlide();
+      tsSlide.background = { color: DARK_BG };
+      const slideLabel = timeSlideCount > 1
+        ? `Zaman Çizelgesi (${si + 1}/${timeSlideCount})`
+        : 'Zaman Çizelgesi';
+      tsSlide.addText(slideLabel, { x: 0.5, y: 0.3, w: 9, h: 0.6, fontSize: 24, color: WHITE, bold: true, fontFace: 'Segoe UI' });
+      tsSlide.addShape(pptx.ShapeType.rect, { x: 0.5, y: 0.85, w: 2, h: 0.04, fill: { type: 'solid', color: GOLD } });
 
-    slide4.addTable(timeRows, {
-      x: 0.5, y: 1.2, w: 9,
-      border: { type: 'solid', pt: 0.5, color: ACCENT },
-      colW: [3, 2, 2, 2],
-      rowH: 0.4,
-    });
+      const timeRows: any[][] = [
+        [
+          { text: 'Tarih', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
+          { text: 'Toplam', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
+          { text: 'Devam Eden', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
+          { text: 'Çözülen', options: { bold: true, color: WHITE, fill: { color: ACCENT }, fontSize: 11, fontFace: 'Segoe UI' } },
+        ],
+        ...slicedStats.map((ts, i) => [
+          { text: ts.date, options: { color: WHITE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
+          { text: ts.count.toString(), options: { color: BLUE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI', bold: true } },
+          { text: ts.pending.toString(), options: { color: ORANGE, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
+          { text: ts.resolved.toString(), options: { color: GREEN, fill: { color: i % 2 === 0 ? CARD_BG : DARK_BG }, fontSize: 10, fontFace: 'Segoe UI' } },
+        ])
+      ];
+
+      tsSlide.addTable(timeRows, {
+        x: 0.5, y: 1.2, w: 9,
+        border: { type: 'solid', pt: 0.5, color: ACCENT },
+        colW: [3, 2, 2, 2],
+        rowH: 0.4,
+      });
+
+      timeSlides.push(tsSlide);
+    }
 
     // ── Slide 5: Konu Dağılımı ──
     const slide5 = pptx.addSlide();
@@ -620,7 +633,7 @@ export function ReportingPanel() {
     // Eklenen slaytlara Logo koyuyoruz
     addLogo(slide2);
     addLogo(slide3);
-    addLogo(slide4);
+    timeSlides.forEach(ts => addLogo(ts));
     addLogo(slide5);
 
     // ── Global Note JSON Parse ──
@@ -719,16 +732,15 @@ export function ReportingPanel() {
         </div>
         <div className="filter-group">
           <Users size={16} />
-          <input
-            list="person-list"
+          <select
             className="form-input"
-            placeholder="Kişi adı filtresi..."
             value={personFilter}
             onChange={e => setPersonFilter(e.target.value)}
-          />
-          <datalist id="person-list">
-            {uniquePersons.map(p => <option key={p} value={p} />)}
-          </datalist>
+            style={{ minWidth: '220px' }}
+          >
+            <option value="">— Tüm Kişiler —</option>
+            {uniquePersons.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
         </div>
         {(dateFrom || dateTo || personFilter) && (
           <button className="btn-reset" onClick={() => { setDateFrom(''); setDateTo(''); setPersonFilter(''); }}>
