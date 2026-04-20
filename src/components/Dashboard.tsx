@@ -36,9 +36,13 @@ export function Dashboard() {
     const matchesSearch = 
       note.storeName.toLowerCase().includes(searchTerm.toLowerCase()) || 
       note.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.fromWhom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.subject.toLowerCase().includes(searchTerm.toLowerCase());
       
-    const matchesSeller = filterSeller ? note.sellerName.toLowerCase().includes(filterSeller.toLowerCase()) : true;
+    const matchesSeller = filterSeller
+      ? note.sellerName.toLowerCase().includes(filterSeller.toLowerCase()) ||
+        note.fromWhom.toLowerCase().includes(filterSeller.toLowerCase())
+      : true;
     const matchesDate = filterDate ? note.requestDate === filterDate : true;
     
     const isMatch = matchesSearch && matchesSeller && matchesDate;
@@ -378,8 +382,8 @@ export function Dashboard() {
                 <Filter size={16} style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }} />
                 {mode === 'seller' && (
                   <input 
-                    type="text" className="form-input" placeholder="Satıcı Filtresi..." 
-                    style={{ width: '150px', background: 'var(--bg-app)' }} 
+                    type="text" className="form-input" placeholder="Satıcı / Kimden..." 
+                    style={{ width: '160px', background: 'var(--bg-app)' }} 
                     value={filterSeller} onChange={e => setFilterSeller(e.target.value)} 
                   />
                 )}
