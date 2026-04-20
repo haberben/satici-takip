@@ -258,6 +258,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
     if (error) {
       console.error('Supabase Insert Error:', error.message);
+      alert('Kayıt eklenirken hata oluştu: ' + error.message + '\n\nİpucu: Veritabanına yeni sütunlar eklenmemiş olabilir. Lütfen SQL scriptini çalıştırdığınızdan emin olun.');
       set((state) => ({ notes: state.notes.filter(n => n.id !== tempId) }));
     } else if (data) {
       set((state) => ({
@@ -307,6 +308,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
     if (error) {
       console.error('Supabase Update Error:', error.message);
+      alert('Kayıt güncellenirken hata oluştu: ' + error.message);
     }
   },
 
@@ -398,6 +400,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
     if (error) {
       console.error('Supabase Insert Error (Issue):', error.message);
+      alert('Sorun eklenirken hata oluştu: ' + error.message + '\n\nİpucu: Veritabanına yeni sütunlar eklenmemiş olabilir. Lütfen SQL scriptini çalıştırdığınızdan emin olun.');
       set((state) => ({ issues: state.issues.filter(i => i.id !== tempId) }));
     } else if (data) {
       set((state) => ({
@@ -428,6 +431,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
     if (error) {
       console.error('Supabase Update Error (Issue):', error.message);
+      alert('Sorun güncellenirken hata oluştu: ' + error.message);
     }
   },
 
