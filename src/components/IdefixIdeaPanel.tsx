@@ -16,11 +16,7 @@ export function IdefixIdeaPanel() {
       return;
     }
 
-    const apiKey = localStorage.getItem('geminiApiKey');
-    if (!apiKey) {
-      setError('Lütfen sağ üstteki "AI Ayarları" butonundan API anahtarınızı girin.');
-      return;
-    }
+    const apiKey = localStorage.getItem('geminiApiKey') || '';
 
     setLoading(true);
     setError(null);
@@ -128,7 +124,7 @@ export function IdefixIdeaPanel() {
           )}
 
           {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4" style={{ minHeight: '400px' }}>
+            <div className="flex-1 flex items-center justify-center text-gray-400 gap-4" style={{ flexDirection: 'column', minHeight: '400px' }}>
               <Loader2 size={40} className="animate-spin" style={{ color: '#d97706' }} />
               <p>Fikriniz profesyonel bir sunuma dönüştürülüyor...</p>
             </div>
@@ -137,10 +133,10 @@ export function IdefixIdeaPanel() {
               <ReactMarkdown>{result}</ReactMarkdown>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 text-center" style={{ opacity: 0.6, minHeight: '400px' }}>
+            <div className="flex-1 flex items-center justify-center text-gray-400 gap-3 text-center" style={{ flexDirection: 'column', opacity: 0.6, minHeight: '400px' }}>
               <Presentation size={48} />
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>Taslak Bekleniyor</h3>
-              <p style={{ maxWidth: '400px' }}>Aklınızdaki fikri sol tarafa yazarak İdefix formatında bir sunum taslağı elde edebilirsiniz.</p>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>Taslak Bekleniyor</h3>
+              <p style={{ maxWidth: '400px', margin: 0 }}>Aklınızdaki fikri sol tarafa yazarak İdefix formatında bir sunum taslağı elde edebilirsiniz.</p>
             </div>
           )}
         </div>

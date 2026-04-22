@@ -1,5 +1,6 @@
 export const callGeminiApi = async (prompt: string, apiKey: string) => {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const finalApiKey = apiKey || 'AIzaSyDSyg7-KRCdhHplr-_nhgkguXEz-hUA3-o';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${finalApiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',

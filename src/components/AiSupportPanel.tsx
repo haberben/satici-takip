@@ -12,11 +12,7 @@ export function AiSupportPanel() {
   const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
-    const apiKey = localStorage.getItem('geminiApiKey');
-    if (!apiKey) {
-      setError('Lütfen önce sağ üstteki "AI Ayarları" butonundan API anahtarınızı girin.');
-      return;
-    }
+    const apiKey = localStorage.getItem('geminiApiKey') || '';
 
     setLoading(true);
     setError(null);
@@ -102,7 +98,7 @@ export function AiSupportPanel() {
           )}
 
           {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-4" style={{ minHeight: '400px' }}>
+            <div className="flex-1 flex items-center justify-center text-gray-400 gap-4" style={{ flexDirection: 'column', minHeight: '400px' }}>
               <Loader2 size={40} className="animate-spin" style={{ color: 'var(--primary-color)' }} />
               <p>Yapay zeka verilerinizi analiz ediyor, lütfen bekleyin...</p>
             </div>
@@ -111,10 +107,10 @@ export function AiSupportPanel() {
               <ReactMarkdown>{analysisResult}</ReactMarkdown>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 text-center" style={{ opacity: 0.6, minHeight: '400px' }}>
+            <div className="flex-1 flex items-center justify-center text-gray-400 gap-3 text-center" style={{ flexDirection: 'column', opacity: 0.6, minHeight: '400px' }}>
               <Sparkles size={48} />
-              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>Henüz Analiz Yapılmadı</h3>
-              <p style={{ maxWidth: '400px' }}>Sol taraftaki butonu kullanarak veritabanınızdaki sorunların yapay zeka tarafından analiz edilmesini sağlayın.</p>
+              <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>Henüz Analiz Yapılmadı</h3>
+              <p style={{ maxWidth: '400px', margin: 0 }}>Sol taraftaki butonu kullanarak veritabanınızdaki sorunların yapay zeka tarafından analiz edilmesini sağlayın.</p>
             </div>
           )}
         </div>
