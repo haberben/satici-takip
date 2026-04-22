@@ -1,5 +1,11 @@
 export const callGeminiApi = async (prompt: string, apiKey: string) => {
-  const finalApiKey = apiKey || 'AIzaSyDSyg7-KRCdhHplr-_nhgkguXEz-hUA3-o';
+  const envKey = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_GEMINI_API_KEY : '';
+  const finalApiKey = apiKey || envKey;
+  
+  if (!finalApiKey) {
+    throw new Error('API anahtarı bulunamadı. Lütfen sağ üstteki ayarlar ikonundan API anahtarınızı girin.');
+  }
+
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${finalApiKey}`;
 
   const response = await fetch(url, {
