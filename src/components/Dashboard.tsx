@@ -267,48 +267,71 @@ export function Dashboard() {
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" style={{ background: 'var(--bg-hover)', flexWrap: 'wrap' }}>
+          <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-hover)', flexWrap: 'wrap', borderRadius: '0.5rem', padding: '0.25rem' }}>
             <button
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'seller' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
               onClick={() => setMode('seller')}
-              style={mode === 'seller' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
+              style={{
+                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                background: mode === 'seller' ? 'var(--bg-panel)' : 'transparent',
+                color: mode === 'seller' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                boxShadow: mode === 'seller' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
+              }}
             >
               Satıcı Takip
             </button>
             <button
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'issues' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
               onClick={() => setMode('issues')}
-              style={mode === 'issues' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
+              style={{
+                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                background: mode === 'issues' ? 'var(--bg-panel)' : 'transparent',
+                color: mode === 'issues' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                boxShadow: mode === 'issues' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
+              }}
             >
               Genel Sorunlar
             </button>
             <button
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'reports' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
               onClick={() => setMode('reports')}
-              style={mode === 'reports' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
+              style={{
+                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                background: mode === 'reports' ? 'var(--bg-panel)' : 'transparent',
+                color: mode === 'reports' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                boxShadow: mode === 'reports' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
+              }}
             >
               Raporlama
             </button>
             {isOwner && (
               <>
                 <button
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'ai-support' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
                   onClick={() => setMode('ai-support')}
-                  style={mode === 'ai-support' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
+                  style={{
+                    padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    background: mode === 'ai-support' ? 'var(--bg-panel)' : 'transparent',
+                    color: mode === 'ai-support' ? 'var(--primary-color)' : 'var(--text-secondary)',
+                    boxShadow: mode === 'ai-support' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
+                  }}
                 >
                   Arka Sayfa
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'idefix-idea' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
                   onClick={() => setMode('idefix-idea')}
-                  style={mode === 'idefix-idea' ? { background: 'var(--bg-panel)', color: '#d97706' } : { color: 'var(--text-secondary)' }}
+                  style={{
+                    padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    background: mode === 'idefix-idea' ? 'var(--bg-panel)' : 'transparent',
+                    color: mode === 'idefix-idea' ? '#d97706' : 'var(--text-secondary)',
+                    boxShadow: mode === 'idefix-idea' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
+                  }}
                 >
                   İdefix Fikir Alanı
                 </button>
                 <button
-                  className="px-3 py-2 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-900"
                   onClick={() => setIsAiSettingsOpen(true)}
                   title="Yapay Zeka Ayarları"
+                  style={{
+                    padding: '0.5rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    background: 'transparent', color: 'var(--text-secondary)'
+                  }}
                 >
                   <Settings size={18} />
                 </button>

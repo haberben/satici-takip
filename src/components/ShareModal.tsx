@@ -22,9 +22,9 @@ export function ShareModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-      <div className="rounded-lg shadow-xl max-w-lg w-full p-6 relative" style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-color)' }}>
-        <button onClick={onClose} className="absolute top-4 right-4" style={{ color: 'var(--text-secondary)' }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem', background: 'rgba(0,0,0,0.5)' }}>
+      <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-color)', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', maxWidth: '32rem', width: '100%', padding: '1.5rem', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
           <X size={20} />
         </button>
         
