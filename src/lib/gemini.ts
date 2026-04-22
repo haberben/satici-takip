@@ -6,7 +6,7 @@ export const callGeminiApi = async (prompt: string, apiKey: string) => {
     throw new Error('API anahtarı bulunamadı. Lütfen sağ üstteki ayarlar ikonundan API anahtarınızı girin.');
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${finalApiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${finalApiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',

@@ -267,7 +267,7 @@ export function Dashboard() {
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" style={{ background: 'var(--bg-hover)', flexWrap: 'wrap' }}>
             <button
               className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'seller' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
               onClick={() => setMode('seller')}

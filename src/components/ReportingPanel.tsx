@@ -300,8 +300,8 @@ export function ReportingPanel() {
       return sum + count;
     }, 0);
 
-    // Tekil Satıcı Sayısı
-    const uniqueSellersCount = new Set(filteredNotes.map(n => n.sellerName).filter(Boolean)).size;
+    // Tekil Satıcı Sayısı (Mağaza adına göre)
+    const uniqueSellersCount = new Set(filteredNotes.map(n => n.storeName).filter(Boolean)).size;
 
     const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
 
