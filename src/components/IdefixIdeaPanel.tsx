@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Lightbulb, Download, Loader2, AlertCircle, FilePresentation } from 'lucide-react';
+import { useState } from 'react';
+import { Lightbulb, Download, Loader2, AlertCircle, Presentation, Sparkles } from 'lucide-react';
 import { callGeminiApi } from '../lib/gemini';
 import ReactMarkdown from 'react-markdown';
 import pptxgen from 'pptxgenjs';
@@ -138,7 +138,7 @@ export function IdefixIdeaPanel() {
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 text-center" style={{ opacity: 0.6, minHeight: '400px' }}>
-              <FilePresentation size={48} />
+              <Presentation size={48} />
               <h3 style={{ fontSize: '1.2rem', color: 'var(--text-primary)' }}>Taslak Bekleniyor</h3>
               <p style={{ maxWidth: '400px' }}>Aklınızdaki fikri sol tarafa yazarak İdefix formatında bir sunum taslağı elde edebilirsiniz.</p>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Sparkles, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 import { callGeminiApi } from '../lib/gemini';

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter, BarChart3 } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 import { IssuesGrid } from './IssuesGrid';
 import { ReportingPanel } from './ReportingPanel';
@@ -14,7 +14,7 @@ import { IdefixIdeaPanel } from './IdefixIdeaPanel';
 import { Settings } from 'lucide-react';
 
 export function Dashboard() {
-  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut, workspacePermissions } = useStore();
+  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, user, signOut, workspacePermissions } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit' || activeWorkspace === currentUserEmail;
   const isOwner = activeWorkspace === currentUserEmail || !activeWorkspace;
