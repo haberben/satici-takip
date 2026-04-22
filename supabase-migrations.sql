@@ -16,3 +16,6 @@ CREATE POLICY "Herkes okuyabilir" ON workspace_settings
 
 CREATE POLICY "KullanÄ±cÄ±lar kendi ayarlarÄ±nÄ± gÃ¼ncelleyebilir" ON workspace_settings
   FOR ALL USING (auth.email() = owner_email);
+
+-- Paylaþým panelinde Görüntüleme/Düzenleme yetkisi için gereken kolon
+ALTER TABLE panel_shares ADD COLUMN IF NOT EXISTS permission_level TEXT DEFAULT 'view';
