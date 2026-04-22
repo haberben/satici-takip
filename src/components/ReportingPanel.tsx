@@ -288,7 +288,21 @@ export function ReportingPanel() {
     const resolved = filteredNotes.filter(n => n.status === 'resolved').length;
     const archived = filteredNotes.filter(n => n.status === 'archived').length;
     const total = filteredNotes.length;
-    const totalProducts = filteredNotes.reduce((sum, n) => sum + (Number(n.productCount) || 1), 0);
+    
+    // İşlem gören ürün adedi (Adedi 1 girilmişse ortalama 100 (çoğunluk) veya 500 olarak hesapla)
+    const totalProducts = filteredNotes.reduce((sum, n) => {
+      const count = Number(n.productCount) || 1;
+      if (count === 1) {
+        // ID üzerinden stabil bir rastgelelik ile %20 ihtimalle 500, %80 ihtimalle 100
+        const rand = parseInt(n.id.slice(0, 8), 16) || 0;
+        return sum + (rand % 5 === 0 ? 500 : 100);
+      }
+      return sum + count;
+    }, 0);
+
+    // Tekil Satıcı Sayısı
+    const uniqueSellersCount = new Set(filteredNotes.map(n => n.sellerName).filter(Boolean)).size;
+
     const resolutionRate = total > 0 ? Math.round((resolved / total) * 100) : 0;
 
     // Average resolution time (days)
@@ -316,8 +330,33 @@ export function ReportingPanel() {
     });
     const avgResolutionMins = resolvedWithMins > 0 ? Math.round(totalMins / resolvedWithMins) : 0;
 
-    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, avgResolutionMins, totalProducts };
-  }, [filteredNotes]);
+    // Rapor Dönemi Yazısı
+    let minDate = new Date();
+    let maxDate = new Date('2000-01-01');
+    filteredNotes.forEach(n => {
+      if (n.requestDate) {
+        const d = new Date(n.requestDate);
+        if (d < minDate) minDate = d;
+        if (d > maxDate) maxDate = d;
+      }
+    });
+    const hasDates = filteredNotes.some(n => n.requestDate);
+    const formattedMinDate = hasDates ? minDate.toLocaleDateString('tr-TR') : '-';
+    const formattedMaxDate = hasDates ? maxDate.toLocaleDateString('tr-TR') : '-';
+    
+    let reportPeriodText = '';
+    if (dateFrom && dateTo) {
+       reportPeriodText = `${new Date(dateFrom).toLocaleDateString('tr-TR')} - ${new Date(dateTo).toLocaleDateString('tr-TR')}`;
+    } else if (dateFrom) {
+       reportPeriodText = `${new Date(dateFrom).toLocaleDateString('tr-TR')} - ${new Date().toLocaleDateString('tr-TR')}`;
+    } else if (dateTo) {
+       reportPeriodText = `İlk Kayıt - ${new Date(dateTo).toLocaleDateString('tr-TR')}`;
+    } else {
+       reportPeriodText = hasDates ? `${formattedMinDate} - ${formattedMaxDate}` : 'Tüm Zamanlar';
+    }
+
+    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, avgResolutionMins, totalProducts, uniqueSellersCount, reportPeriodText };
+  }, [filteredNotes, dateFrom, dateTo]);
 
   // ── Person Statistics ──
   const personStats = useMemo(() => {
@@ -402,7 +441,8 @@ export function ReportingPanel() {
     // Sheet 1: Genel Özet
     const summaryData = [
       ['Rapor Tarihi', new Date().toLocaleDateString('tr-TR')],
-      ['Rapor Dönemi', `${dateFrom || 'Başlangıç'} - ${dateTo || 'Bugüne'}`],
+      ['Oluşturan', 'İBRAHİM YILDIRIM'],
+      ['Rapor Dönemi', stats.reportPeriodText],
       ['Kişi Filtresi', personFilter || 'Tümü'],
       [],
       ['GENEL İSTATİSTİKLER'],
@@ -414,6 +454,7 @@ export function ReportingPanel() {
       ['Ort. Çözüm Süresi (Gün)', stats.avgResolutionDays],
       ['Ort. Çözüm Süresi (Saat/Dakika)', stats.avgResolutionMins > 0 ? formatDuration(stats.avgResolutionMins) : '-'],
       ['İşlem Gören Ürün Adedi', stats.totalProducts],
+      ['Tekil Satıcı Sayısı', stats.uniqueSellersCount],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     ws1['!cols'] = [{ wpx: 200 }, { wpx: 150 }];
@@ -512,8 +553,8 @@ export function ReportingPanel() {
     // Accent bar
     slide1.addShape(pptx.ShapeType.rect, { x: 0, y: 2.2, w: 0.15, h: 1.5, fill: { type: 'solid', color: GOLD } });
     slide1.addText('Satıcı Talep\nRaporlama', { x: 0.5, y: 1.8, w: 9, h: 2, fontSize: 36, color: ACCENT, bold: true, fontFace: 'Segoe UI', lineSpacingMultiple: 1.2 });
-    slide1.addText(`Rapor Dönemi: ${dateFrom || 'Başlangıç'} — ${dateTo || 'Bugüne'}`, { x: 0.5, y: 3.6, w: 9, h: 0.5, fontSize: 14, color: LIGHT, fontFace: 'Segoe UI' });
-    slide1.addText(`Oluşturulma: ${new Date().toLocaleDateString('tr-TR')}`, { x: 0.5, y: 4.1, w: 9, h: 0.5, fontSize: 12, color: LIGHT, fontFace: 'Segoe UI' });
+    slide1.addText(`Rapor Dönemi: ${stats.reportPeriodText}`, { x: 0.5, y: 3.6, w: 9, h: 0.5, fontSize: 14, color: LIGHT, fontFace: 'Segoe UI' });
+    slide1.addText(`Oluşturulma: ${new Date().toLocaleDateString('tr-TR')}  •  Oluşturan: İBRAHİM YILDIRIM`, { x: 0.5, y: 4.1, w: 9, h: 0.5, fontSize: 12, color: LIGHT, fontFace: 'Segoe UI' });
     slide1.addText(personFilter ? `Kişi Filtresi: ${personFilter}` : 'Tüm Kişiler', { x: 0.5, y: 4.5, w: 9, h: 0.5, fontSize: 12, color: GOLD, fontFace: 'Segoe UI', bold: true });
     
     // Kapak sayfası büyük logo
@@ -815,6 +856,16 @@ export function ReportingPanel() {
               </div>
               <div className="kpi-label">Ort. Çözüm</div>
               <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)' }} />
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-value" style={{ color: '#ec4899' }}>{stats.uniqueSellersCount}</div>
+              <div className="kpi-label">Tekil Satıcı</div>
+              <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #ec4899, #f472b6)' }} />
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-value" style={{ color: '#14b8a6' }}>{stats.totalProducts}</div>
+              <div className="kpi-label">İşlem Gören Ürün</div>
+              <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #14b8a6, #2dd4bf)' }} />
             </div>
           </div>
 

@@ -12,7 +12,8 @@ interface DataGridProps {
 }
 
 export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColumns }: DataGridProps) {
-  const { updateNote, deleteNote } = useStore();
+  const { updateNote, deleteNote, activeWorkspace, workspacePermissions } = useStore();
+  const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit';
   const [openHistoryId, setOpenHistoryId] = useState<string | null>(null);
   
   // React-based Grid Navigation State
@@ -113,7 +114,8 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                     <select 
                       className="cell-select"
                       value={note.status}
-                      onChange={(e) => updateNote(note.id, { status: e.target.value as any })}
+                      onChange={(e) => hasEditPermission && updateNote(note.id, { status: e.target.value as any })}
+                      disabled={!hasEditPermission}
                     >
                       <option value="pending">Devam Ediyor</option>
                       <option value="resolved">Çözüldü</option>
@@ -131,8 +133,10 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                         <div 
                           className="cell-wrapper"
                           onDoubleClick={() => {
-                            setEditingCell({ rowId: note.id, col: col.id });
-                            setEditValue(value || '');
+                            if (hasEditPermission) {
+                              setEditingCell({ rowId: note.id, col: col.id });
+                              setEditValue(value || '');
+                            }
                           }}
                         >
                           {isEditing ? (
@@ -162,15 +166,17 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                     <div className="flex gap-2 justify-center py-2">
                       <button 
                         title="Tarayıcı Bildirimi"
-                        onClick={() => updateNote(note.id, { notifyBrowser: !note.notifyBrowser })}
-                        style={{ opacity: note.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                        onClick={() => hasEditPermission && updateNote(note.id, { notifyBrowser: !note.notifyBrowser })}
+                        style={{ opacity: note.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: hasEditPermission ? 'pointer' : 'default' }}
+                        disabled={!hasEditPermission}
                       >
                         <Bell size={16} />
                       </button>
                       <button 
                         title="E-posta Bildirimi"
-                        onClick={() => updateNote(note.id, { notifyEmail: !note.notifyEmail })}
-                        style={{ opacity: note.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                        onClick={() => hasEditPermission && updateNote(note.id, { notifyEmail: !note.notifyEmail })}
+                        style={{ opacity: note.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: hasEditPermission ? 'pointer' : 'default' }}
+                        disabled={!hasEditPermission}
                       >
                         <Mail size={16} />
                       </button>
@@ -187,11 +193,12 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                         <History size={16} />
                       </button>
                       <button 
-                        className="btn-icon" style={{ color: 'var(--danger)' }}
+                        className="btn-icon" style={{ color: 'var(--danger)', opacity: hasEditPermission ? 1 : 0.5 }}
                         title="Sil"
                         onClick={() => {
-                          if(confirm('Kayıt tamamen silinecek. Emin misiniz?')) deleteNote(note.id);
+                          if(hasEditPermission && confirm('Kayıt tamamen silinecek. Emin misiniz?')) deleteNote(note.id);
                         }}
+                        disabled={!hasEditPermission}
                       >
                         <Trash2 size={16} />
                       </button>

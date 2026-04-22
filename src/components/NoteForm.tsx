@@ -32,9 +32,24 @@ export function NoteForm({ note, onSave, onDelete, onCancel }: Props) {
     }
   }, [note]);
 
+  const notes = useStore(state => state.notes);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    setFormData(prev => {
+      const updates: Partial<SellerNote> = { [name]: value };
+      
+      if (name === 'storeName' && value) {
+        const match = notes.find(n => n.storeName.toLowerCase() === value.toLowerCase() && n.sellerName);
+        if (match) {
+          if (!prev.sellerName) updates.sellerName = match.sellerName;
+          if (!prev.phoneNumber && match.phoneNumber) updates.phoneNumber = match.phoneNumber;
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,7 +57,6 @@ export function NoteForm({ note, onSave, onDelete, onCancel }: Props) {
     onSave(formData);
   };
 
-  const notes = useStore(state => state.notes);
   const uniqueStoreNames = useMemo(() => Array.from(new Set(notes.map(n => n.storeName).filter(Boolean))), [notes]);
   const uniqueFromWhom = useMemo(() => Array.from(new Set(notes.map(n => n.fromWhom).filter(Boolean))), [notes]);
   const uniqueSubjects = useMemo(() => Array.from(new Set(notes.map(n => n.subject).filter(Boolean))), [notes]);

@@ -9,6 +9,7 @@ interface StoreState {
   isLoading: boolean;
   activeWorkspace: string | null;
   availableWorkspaces: string[];
+  workspacePermissions: Record<string, 'view' | 'edit'>;
   initWorkspaces: (userEmail: string) => Promise<void>;
   setActiveWorkspace: (workspaceEmail: string) => void;
   fetchNotes: () => Promise<void>;
@@ -19,8 +20,11 @@ interface StoreState {
   deleteNote: (id: string) => Promise<void>;
   bulkDeleteNotes: (ids: string[]) => Promise<void>;
   markReminderSent: (id: string) => Promise<void>;
-  sharePanel: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
+  sharePanel: (ownerEmail: string, sharedWithEmail: string, permissionLevel?: 'view' | 'edit') => Promise<void>;
   removeShare: (ownerEmail: string, sharedWithEmail: string) => Promise<void>;
+  shares: any[];
+  fetchShares: () => Promise<void>;
+  updateSharePermission: (id: string, permissionLevel: 'view' | 'edit') => Promise<void>;
   user: any | null;
   checkAuth: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -45,6 +49,8 @@ export const useStore = create<StoreState>((set, get) => ({
   isLoading: false,
   activeWorkspace: null,
   availableWorkspaces: [],
+  workspacePermissions: {},
+  shares: [],
   user: null,
   issues: [],
 
@@ -93,21 +99,28 @@ export const useStore = create<StoreState>((set, get) => ({
   initWorkspaces: async (userEmail: string) => {
     // Kendi hesabimiz her zaman var
     let workspaces = [userEmail];
+    let permissions: Record<string, 'view' | 'edit'> = { [userEmail]: 'edit' };
     
     // Bize paylasilan panelleri bul
     const { data } = await supabase
       .from('panel_shares')
-      .select('owner_email')
+      .select('owner_email, permission_level')
       .eq('shared_with_email', userEmail);
     
     if (data) {
-      workspaces = [...workspaces, ...data.map(d => d.owner_email)];
+      data.forEach(d => {
+        if (!workspaces.includes(d.owner_email)) {
+          workspaces.push(d.owner_email);
+        }
+        permissions[d.owner_email] = d.permission_level || 'view';
+      });
     }
     
-    set({ availableWorkspaces: workspaces, activeWorkspace: userEmail });
+    set({ availableWorkspaces: workspaces, workspacePermissions: permissions, activeWorkspace: userEmail });
     get().fetchNotes();
     get().fetchIssues();
     get().fetchGlobalNote();
+    get().fetchShares();
   },
 
   setActiveWorkspace: (workspaceEmail: string) => {
@@ -342,16 +355,45 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  sharePanel: async (ownerEmail: string, sharedWithEmail: string) => {
+  fetchShares: async () => {
+    const userEmail = get().user?.email;
+    if (!userEmail) return;
+    
+    const { data, error } = await supabase
+      .from('panel_shares')
+      .select('*')
+      .eq('owner_email', userEmail);
+      
+    if (!error && data) {
+      set({ shares: data });
+    }
+  },
+
+  sharePanel: async (ownerEmail: string, sharedWithEmail: string, permissionLevel: 'view' | 'edit' = 'view') => {
     const { error } = await supabase
       .from('panel_shares')
-      .insert([{ owner_email: ownerEmail, shared_with_email: sharedWithEmail }]);
+      .insert([{ owner_email: ownerEmail, shared_with_email: sharedWithEmail, permission_level: permissionLevel }]);
     
     if (error) {
       console.error('Share Panel Error:', error.message);
       alert('Paylaşım eklenirken bir hata oluştu: ' + error.message);
     } else {
       alert(sharedWithEmail + ' artık panelinizi görebilir.');
+      get().fetchShares();
+    }
+  },
+
+  updateSharePermission: async (id: string, permissionLevel: 'view' | 'edit') => {
+    const { error } = await supabase
+      .from('panel_shares')
+      .update({ permission_level: permissionLevel })
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Update Share Error:', error.message);
+      alert('Yetki güncellenirken hata oluştu: ' + error.message);
+    } else {
+      get().fetchShares();
     }
   },
 
@@ -363,6 +405,8 @@ export const useStore = create<StoreState>((set, get) => ({
     
     if (error) {
       console.error('Remove Share Error:', error.message);
+    } else {
+      get().fetchShares();
     }
   },
 

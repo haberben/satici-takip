@@ -42,6 +42,7 @@ export interface PanelShare {
   id: string;
   owner_email: string;
   shared_with_email: string;
+  permission_level?: 'view' | 'edit';
 }
 
 export type IssueStatus = 'pending' | 'resolved' | 'archived';

@@ -7,11 +7,19 @@ import { IssuesGrid } from './IssuesGrid';
 import { ReportingPanel } from './ReportingPanel';
 import { ColumnSettingsPanel } from './ColumnSettingsPanel';
 import { useColumnConfig } from '../utils/useColumnConfig';
+import { ShareModal } from './ShareModal';
+import { AiSettingsModal } from './AiSettingsModal';
+import { AiSupportPanel } from './AiSupportPanel';
+import { IdefixIdeaPanel } from './IdefixIdeaPanel';
+import { Settings } from 'lucide-react';
 
 export function Dashboard() {
-  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut } = useStore();
+  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, sharePanel, user, signOut, workspacePermissions } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
-  const [mode, setMode] = useState<'seller' | 'issues' | 'reports'>('seller');
+  const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit' || activeWorkspace === currentUserEmail;
+  const isOwner = activeWorkspace === currentUserEmail || !activeWorkspace;
+  const [mode, setMode] = useState<'seller' | 'issues' | 'reports' | 'ai-support' | 'idefix-idea'>('seller');
+  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
   
   const normalizeTurkish = (str: string) => {
     if (!str) return '';
@@ -214,15 +222,10 @@ export function Dashboard() {
     }
   };
 
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   const handleShare = () => {
-    const email = prompt('Panelinizi paylaşmak istediğiniz e-posta adresini girin:');
-    if (email && currentUserEmail) {
-      if(email === currentUserEmail) {
-         alert("Kendi kendinize paylaşım yapamazsınız.");
-         return;
-      }
-      sharePanel(currentUserEmail, email);
-    }
+    setIsShareModalOpen(true);
   };
 
   return (
@@ -264,26 +267,53 @@ export function Dashboard() {
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <div className="flex gap-4 mb-2">
-            <button 
-              className={`btn ${mode === 'seller' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => { setMode('seller'); setSelectedIds([]); setCurrentPage(1); }}
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+            <button
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'seller' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+              onClick={() => setMode('seller')}
+              style={mode === 'seller' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
             >
-              Satıcı Takip Modeli
+              Satıcı Takip
             </button>
-            <button 
-              className={`btn ${mode === 'issues' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => { setMode('issues'); setSelectedIds([]); setCurrentPage(1); }}
+            <button
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'issues' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+              onClick={() => setMode('issues')}
+              style={mode === 'issues' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
             >
-              Sorunlar & Çözümler
+              Genel Sorunlar
             </button>
-            <button 
-              className={`btn ${mode === 'reports' ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => { setMode('reports'); setSelectedIds([]); setCurrentPage(1); }}
-              style={mode === 'reports' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none' } : {}}
+            <button
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'reports' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+              onClick={() => setMode('reports')}
+              style={mode === 'reports' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
             >
-              <BarChart3 size={16} /> Raporlama
+              Raporlama
             </button>
+            {isOwner && (
+              <>
+                <button
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'ai-support' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => setMode('ai-support')}
+                  style={mode === 'ai-support' ? { background: 'var(--bg-panel)', color: 'var(--primary-color)' } : { color: 'var(--text-secondary)' }}
+                >
+                  Arka Sayfa
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md font-medium transition-colors ${mode === 'idefix-idea' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
+                  onClick={() => setMode('idefix-idea')}
+                  style={mode === 'idefix-idea' ? { background: 'var(--bg-panel)', color: '#d97706' } : { color: 'var(--text-secondary)' }}
+                >
+                  İdefix Fikir Alanı
+                </button>
+                <button
+                  className="px-3 py-2 rounded-md font-medium transition-colors text-gray-600 hover:text-gray-900"
+                  onClick={() => setIsAiSettingsOpen(true)}
+                  title="Yapay Zeka Ayarları"
+                >
+                  <Settings size={18} />
+                </button>
+              </>
+            )}
           </div>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px', marginTop: '0.5rem' }}>
             {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & İstatistikler'}
@@ -307,23 +337,25 @@ export function Dashboard() {
                <button className="btn btn-outline" style={{ color: 'initial', borderColor: 'var(--success)' }} onClick={() => exportToExcel(true)}>
                  <Download size={18} /> İndir
                </button>
-               <button className="btn btn-outline" style={{ color: 'white', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => {
-                 if(confirm(`${selectedIds.length} kaydı tamamen silmek istediğinize emin misiniz?`)){
-                   if (mode === 'seller') {
-                     useStore.getState().bulkDeleteNotes(selectedIds);
-                   } else {
-                     useStore.getState().bulkDeleteIssues(selectedIds);
+               {hasEditPermission && (
+                 <button className="btn btn-outline" style={{ color: 'white', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => {
+                   if(confirm(`${selectedIds.length} kaydı tamamen silmek istediğinize emin misiniz?`)){
+                     if (mode === 'seller') {
+                       useStore.getState().bulkDeleteNotes(selectedIds);
+                     } else {
+                       useStore.getState().bulkDeleteIssues(selectedIds);
+                     }
+                     setSelectedIds([]);
                    }
-                   setSelectedIds([]);
-                 }
-               }}>
-                 <Trash2 size={18} /> Sil
-               </button>
+                 }}>
+                   <Trash2 size={18} /> Sil
+                 </button>
+               )}
             </div>
           ) : (
             <>
-              {mode === 'seller' && <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />}
-              {mode === 'seller' && (
+              {mode === 'seller' && hasEditPermission && <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />}
+              {mode === 'seller' && hasEditPermission && (
                 <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
                   <Upload size={18} /> İçe Aktar
                 </button>
@@ -343,9 +375,11 @@ export function Dashboard() {
               <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
                 <BookOpen size={18} /> Serbest Defter
               </button>
-              <button className="btn btn-primary" onClick={handleAddNewRow}>
-                <Plus size={18} /> Yeni Ekle
-              </button>
+              {hasEditPermission && (
+                <button className="btn btn-primary" onClick={handleAddNewRow}>
+                  <Plus size={18} /> Yeni Ekle
+                </button>
+              )}
             </>
           )}
         </div>
@@ -354,6 +388,10 @@ export function Dashboard() {
 
       {mode === 'reports' ? (
         <ReportingPanel />
+      ) : mode === 'ai-support' && isOwner ? (
+        <AiSupportPanel />
+      ) : mode === 'idefix-idea' && isOwner ? (
+        <IdefixIdeaPanel />
       ) : (
         <>
           <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -483,6 +521,8 @@ export function Dashboard() {
       )}
 
       <GlobalNotesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      {isShareModalOpen && <ShareModal onClose={() => setIsShareModalOpen(false)} />}
+      {isAiSettingsOpen && <AiSettingsModal onClose={() => setIsAiSettingsOpen(false)} />}
     </div>
   );
 }

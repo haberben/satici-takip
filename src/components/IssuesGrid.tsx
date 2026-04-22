@@ -4,7 +4,8 @@ import { useStore } from '../store/useStore';
 import { Trash2, Bell, Mail } from 'lucide-react';
 
 export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issues: IssueNote[], selectedIds?: string[], setSelectedIds?: Function }) {
-  const { updateIssue, deleteIssue } = useStore();
+  const { updateIssue, deleteIssue, activeWorkspace, workspacePermissions } = useStore();
+  const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit';
   const [editingCell, setEditingCell] = useState<{ rowId: string, col: keyof IssueNote } | null>(null);
   const [editValue, setEditValue] = useState<any>('');
 
@@ -71,7 +72,8 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
                   <select 
                     className="cell-select"
                     value={issue.status}
-                    onChange={(e) => updateIssue(issue.id, { status: e.target.value as any })}
+                    onChange={(e) => hasEditPermission && updateIssue(issue.id, { status: e.target.value as any })}
+                    disabled={!hasEditPermission}
                   >
                     <option value="pending">Devam Ediyor</option>
                     <option value="resolved">Çözüldü</option>
@@ -89,8 +91,10 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
                       <div 
                         className="cell-wrapper"
                         onDoubleClick={() => {
-                          setEditingCell({ rowId: issue.id, col: col.id });
-                          setEditValue(value || '');
+                          if (hasEditPermission) {
+                            setEditingCell({ rowId: issue.id, col: col.id });
+                            setEditValue(value || '');
+                          }
                         }}
                       >
                         {isEditing ? (
@@ -117,15 +121,17 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
                   <div className="flex gap-2 justify-center py-2">
                     <button 
                       title="Tarayıcı Bildirimi"
-                      onClick={() => updateIssue(issue.id, { notifyBrowser: !issue.notifyBrowser })}
-                      style={{ opacity: issue.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                      onClick={() => hasEditPermission && updateIssue(issue.id, { notifyBrowser: !issue.notifyBrowser })}
+                      style={{ opacity: issue.notifyBrowser ? 1 : 0.3, background: 'none', border: 'none', cursor: hasEditPermission ? 'pointer' : 'default' }}
+                      disabled={!hasEditPermission}
                     >
                       <Bell size={16} />
                     </button>
                     <button 
                       title="E-posta Bildirimi"
-                      onClick={() => updateIssue(issue.id, { notifyEmail: !issue.notifyEmail })}
-                      style={{ opacity: issue.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: 'pointer' }}
+                      onClick={() => hasEditPermission && updateIssue(issue.id, { notifyEmail: !issue.notifyEmail })}
+                      style={{ opacity: issue.notifyEmail ? 1 : 0.3, background: 'none', border: 'none', cursor: hasEditPermission ? 'pointer' : 'default' }}
+                      disabled={!hasEditPermission}
                     >
                       <Mail size={16} />
                     </button>
@@ -134,11 +140,12 @@ export function IssuesGrid({ issues, selectedIds = [], setSelectedIds }: { issue
 
                 <td style={{ textAlign: 'right', padding: '0 1rem' }}>
                   <button 
-                    className="btn-icon" style={{ color: 'var(--danger)' }}
+                    className="btn-icon" style={{ color: 'var(--danger)', opacity: hasEditPermission ? 1 : 0.5 }}
                     title="Sil"
                     onClick={() => {
-                      if(confirm('Kayıt tamamen silinecek. Emin misiniz?')) deleteIssue(issue.id);
+                      if(hasEditPermission && confirm('Kayıt tamamen silinecek. Emin misiniz?')) deleteIssue(issue.id);
                     }}
+                    disabled={!hasEditPermission}
                   >
                     <Trash2 size={16} />
                   </button>
