@@ -61,3 +61,8 @@ export interface IssueNote {
   durationMinutes?: number;
 }
 
+
+export interface WorkspaceSettings {
+  owner_email: string;
+  column_config: any;
+}

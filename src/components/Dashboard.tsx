@@ -32,7 +32,7 @@ export function Dashboard() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const columnConfig = useColumnConfig();
+  const columnConfig = useColumnConfig(activeWorkspace);
 
   const pendingCount = notes.filter(n => n.status === 'pending').length;
   const resolvedCount = notes.filter(n => n.status === 'resolved').length;

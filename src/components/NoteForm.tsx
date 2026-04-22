@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { type SellerNote } from '../types';
 import { X } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 interface Props {
   note?: SellerNote | null;
@@ -41,6 +42,12 @@ export function NoteForm({ note, onSave, onDelete, onCancel }: Props) {
     onSave(formData);
   };
 
+  const notes = useStore(state => state.notes);
+  const uniqueStoreNames = useMemo(() => Array.from(new Set(notes.map(n => n.storeName).filter(Boolean))), [notes]);
+  const uniqueFromWhom = useMemo(() => Array.from(new Set(notes.map(n => n.fromWhom).filter(Boolean))), [notes]);
+  const uniqueSubjects = useMemo(() => Array.from(new Set(notes.map(n => n.subject).filter(Boolean))), [notes]);
+
+
   return (
     <div className="glass-panel" style={{ position: 'relative' }}>
       <button 
@@ -58,15 +65,30 @@ export function NoteForm({ note, onSave, onDelete, onCancel }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div className="form-group">
             <label className="form-label">Mağaza Adı</label>
-            <input required type="text" name="storeName" value={formData.storeName || ''} onChange={handleChange} className="form-input" />
+            <input required type="text" name="storeName" list="stores-list" value={formData.storeName || ''} onChange={handleChange} className="form-input" />
+            <datalist id="stores-list">
+              {uniqueStoreNames.map((val, idx) => (
+                <option key={idx} value={val} />
+              ))}
+            </datalist>
           </div>
           <div className="form-group">
             <label className="form-label">Kimden Geldiği</label>
-            <input required type="text" name="fromWhom" value={formData.fromWhom || ''} onChange={handleChange} className="form-input" />
+            <input required type="text" name="fromWhom" list="from-whom-list" value={formData.fromWhom || ''} onChange={handleChange} className="form-input" />
+            <datalist id="from-whom-list">
+              {uniqueFromWhom.map((val, idx) => (
+                <option key={idx} value={val} />
+              ))}
+            </datalist>
           </div>
           <div className="form-group">
             <label className="form-label">Konu</label>
-            <input required type="text" name="subject" value={formData.subject || ''} onChange={handleChange} className="form-input" />
+            <input required type="text" name="subject" list="subjects-list" value={formData.subject || ''} onChange={handleChange} className="form-input" />
+            <datalist id="subjects-list">
+              {uniqueSubjects.map((val, idx) => (
+                <option key={idx} value={val} />
+              ))}
+            </datalist>
           </div>
           <div className="form-group">
             <label className="form-label">Ürün Adet Sayısı</label>

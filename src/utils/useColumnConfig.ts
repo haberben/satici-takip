@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { type SellerNote } from '../types';
+import { supabase } from '../lib/supabase';
 
 export interface ColumnDef {
   id: keyof SellerNote;
@@ -28,51 +29,94 @@ export const DEFAULT_COLUMNS: ColumnDef[] = [
   { id: 'reminderDate', label: 'Hatırlatıcı',       defaultLabel: 'Hatırlatıcı',      width: '10%', type: 'datetime-local', visible: true, order: 10 },
 ];
 
-function loadConfig(): ColumnDef[] {
+function mergeWithDefaults(saved: ColumnDef[]): ColumnDef[] {
+  // Merge with defaults to handle new columns added in future updates
+  // Saved config wins for label/visible/order, defaults win for type/width/defaultLabel
+  const merged = DEFAULT_COLUMNS.map(def => {
+    const savedCol = saved.find(s => s.id === def.id);
+    if (savedCol) {
+      return {
+        ...def,
+        label: savedCol.label || def.label,
+        visible: savedCol.visible,
+        order: savedCol.order,
+      };
+    }
+    // New column not in saved config — put it at end
+    return { ...def, order: Math.max(...saved.map(s => s.order), def.order) + 1 };
+  });
+  
+  return merged.sort((a, b) => a.order - b.order);
+}
+
+function loadConfigLocally(): ColumnDef[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_COLUMNS.map(c => ({ ...c }));
-    
-    const saved: ColumnDef[] = JSON.parse(raw);
-    
-    // Merge with defaults to handle new columns added in future updates
-    // Saved config wins for label/visible/order, defaults win for type/width/defaultLabel
-    const merged = DEFAULT_COLUMNS.map(def => {
-      const savedCol = saved.find(s => s.id === def.id);
-      if (savedCol) {
-        return {
-          ...def,
-          label: savedCol.label || def.label,
-          visible: savedCol.visible,
-          order: savedCol.order,
-        };
-      }
-      // New column not in saved config — put it at end
-      return { ...def, order: Math.max(...saved.map(s => s.order), def.order) + 1 };
-    });
-    
-    return merged.sort((a, b) => a.order - b.order);
+    return mergeWithDefaults(JSON.parse(raw));
   } catch {
     return DEFAULT_COLUMNS.map(c => ({ ...c }));
   }
 }
 
-function saveConfig(columns: ColumnDef[]) {
+function saveConfigLocally(columns: ColumnDef[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
 }
 
-export function useColumnConfig() {
-  const [columns, setColumnsState] = useState<ColumnDef[]>(loadConfig);
+export function useColumnConfig(activeWorkspace: string | null) {
+  const [columns, setColumnsState] = useState<ColumnDef[]>(loadConfigLocally);
+
+  // Fetch settings from supabase when workspace changes
+  useEffect(() => {
+    let active = true;
+    if (!activeWorkspace) return;
+    
+    supabase
+      .from('workspace_settings')
+      .select('column_config')
+      .eq('owner_email', activeWorkspace)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          console.error("Workspace settings fetch error:", error.message);
+          return; // fallback to local/defaults
+        }
+        if (data && data.column_config) {
+          setColumnsState(mergeWithDefaults(data.column_config));
+          // cache locally
+          saveConfigLocally(data.column_config);
+        } else {
+          // No settings found in DB for this workspace, fallback to default or local
+          // But actually, we should just show default if none on DB, to keep it consistent
+          setColumnsState(DEFAULT_COLUMNS.map(c => ({ ...c })));
+        }
+      });
+      
+    return () => { active = false; };
+  }, [activeWorkspace]);
 
   const setColumns = useCallback((updater: ColumnDef[] | ((prev: ColumnDef[]) => ColumnDef[])) => {
     setColumnsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       // Re-index order
       const ordered = next.map((c, i) => ({ ...c, order: i }));
-      saveConfig(ordered);
+      saveConfigLocally(ordered);
+
+      // Async save to Supabase
+      if (activeWorkspace) {
+        supabase.from('workspace_settings').upsert({
+          owner_email: activeWorkspace,
+          column_config: ordered
+        }).then(({ error }) => {
+          if (error) console.error("Workspace settings sync error:", error.message);
+        });
+      }
+
       return ordered;
     });
-  }, []);
+  }, [activeWorkspace]);
+
 
   // Get only visible columns, sorted by order
   const visibleColumns = columns.filter(c => c.visible).sort((a, b) => a.order - b.order);
