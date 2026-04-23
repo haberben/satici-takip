@@ -8,9 +8,6 @@ import { ReportingPanel } from './ReportingPanel';
 import { ColumnSettingsPanel } from './ColumnSettingsPanel';
 import { useColumnConfig } from '../utils/useColumnConfig';
 import { ShareModal } from './ShareModal';
-import { AiSettingsModal } from './AiSettingsModal';
-import { AiSupportPanel } from './AiSupportPanel';
-import { IdefixIdeaPanel } from './IdefixIdeaPanel';
 import { Settings } from 'lucide-react';
 
 export function Dashboard() {
@@ -18,8 +15,7 @@ export function Dashboard() {
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit' || activeWorkspace === currentUserEmail;
   const isOwner = activeWorkspace === currentUserEmail || !activeWorkspace;
-  const [mode, setMode] = useState<'seller' | 'issues' | 'reports' | 'ai-support' | 'idefix-idea'>('seller');
-  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+  const [mode, setMode] = useState<'seller' | 'issues' | 'reports'>('seller');
   
   const normalizeTurkish = (str: string) => {
     if (!str) return '';
@@ -303,38 +299,6 @@ export function Dashboard() {
             </button>
             {isOwner && (
               <>
-                <button
-                  onClick={() => setMode('ai-support')}
-                  style={{
-                    padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                    background: mode === 'ai-support' ? 'var(--bg-panel)' : 'transparent',
-                    color: mode === 'ai-support' ? 'var(--primary-color)' : 'var(--text-secondary)',
-                    boxShadow: mode === 'ai-support' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
-                  }}
-                >
-                  Arka Sayfa
-                </button>
-                <button
-                  onClick={() => setMode('idefix-idea')}
-                  style={{
-                    padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                    background: mode === 'idefix-idea' ? 'var(--bg-panel)' : 'transparent',
-                    color: mode === 'idefix-idea' ? '#d97706' : 'var(--text-secondary)',
-                    boxShadow: mode === 'idefix-idea' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
-                  }}
-                >
-                  İdefix Fikir Alanı
-                </button>
-                <button
-                  onClick={() => setIsAiSettingsOpen(true)}
-                  title="Yapay Zeka Ayarları"
-                  style={{
-                    padding: '0.5rem', borderRadius: '0.375rem', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                    background: 'transparent', color: 'var(--text-secondary)'
-                  }}
-                >
-                  <Settings size={18} />
-                </button>
               </>
             )}
           </div>
@@ -411,10 +375,6 @@ export function Dashboard() {
 
       {mode === 'reports' ? (
         <ReportingPanel />
-      ) : mode === 'ai-support' && isOwner ? (
-        <AiSupportPanel />
-      ) : mode === 'idefix-idea' && isOwner ? (
-        <IdefixIdeaPanel />
       ) : (
         <>
           <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -545,7 +505,6 @@ export function Dashboard() {
 
       <GlobalNotesSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       {isShareModalOpen && <ShareModal onClose={() => setIsShareModalOpen(false)} />}
-      {isAiSettingsOpen && <AiSettingsModal onClose={() => setIsAiSettingsOpen(false)} />}
     </div>
   );
 }
