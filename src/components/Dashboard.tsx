@@ -8,7 +8,7 @@ import { ReportingPanel } from './ReportingPanel';
 import { ColumnSettingsPanel } from './ColumnSettingsPanel';
 import { useColumnConfig } from '../utils/useColumnConfig';
 import { ShareModal } from './ShareModal';
-import { Settings } from 'lucide-react';
+
 
 export function Dashboard() {
   const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, user, signOut, workspacePermissions } = useStore();
