@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
 import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
@@ -81,6 +81,33 @@ export function Dashboard() {
   const totalPages = Math.ceil(currentDataLength / itemsPerPage);
   const paginatedNotes = filteredNotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const paginatedIssues = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const topSellerStats = useMemo(() => {
+    if (mode !== 'seller') return { name: '-', products: 0, count: 0 };
+    const sStats: Record<string, { requests: number, products: number }> = {};
+    filteredNotes.forEach(n => {
+      const seller = n.sellerName || n.storeName || 'Belirtilmemiş';
+      if (!sStats[seller]) {
+        sStats[seller] = { requests: 0, products: 0 };
+      }
+      sStats[seller].requests += 1;
+      sStats[seller].products += (Number(n.productCount) || 1);
+    });
+
+    let tName = '-';
+    let tReq = 0;
+    let tProd = 0;
+
+    Object.entries(sStats).forEach(([name, data]) => {
+      if (data.requests > tReq) {
+        tReq = data.requests;
+        tProd = data.products;
+        tName = name;
+      }
+    });
+
+    return { name: tName, count: tReq, products: tProd };
+  }, [filteredNotes, mode]);
 
   const handleAddNewRow = () => {
     if (mode === 'seller') {
@@ -377,7 +404,7 @@ export function Dashboard() {
         <ReportingPanel />
       ) : (
         <>
-          <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: mode === 'seller' ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
             <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
               <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
               <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{activeCount}</p>
@@ -394,6 +421,13 @@ export function Dashboard() {
               <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
               <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{archivedCount}</p>
             </div>
+            {mode === 'seller' && (
+              <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #f43f5e', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h3 style={{ marginBottom: '0.2rem', fontSize: '0.9rem' }}>En Çok Talep Gelen</h3>
+                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#f43f5e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={topSellerStats.name}>{topSellerStats.name}</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>{topSellerStats.products} Ürün Müdahale</p>
+              </div>
+            )}
           </div>
 
           <div className="grid-container mb-4" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

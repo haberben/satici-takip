@@ -355,7 +355,30 @@ export function ReportingPanel() {
        reportPeriodText = hasDates ? `${formattedMinDate} - ${formattedMaxDate}` : 'Tüm Zamanlar';
     }
 
-    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, avgResolutionMins, totalProducts, uniqueSellersCount, reportPeriodText };
+    // En çok talep gelen satıcı ve müdahale edilen ürün sayısı
+    const sellerStats: Record<string, { requests: number, products: number }> = {};
+    filteredNotes.forEach(n => {
+      const seller = n.sellerName || n.storeName || 'Belirtilmemiş';
+      if (!sellerStats[seller]) {
+        sellerStats[seller] = { requests: 0, products: 0 };
+      }
+      sellerStats[seller].requests += 1;
+      sellerStats[seller].products += (Number(n.productCount) || 1);
+    });
+
+    let topSellerName = '-';
+    let topSellerRequests = 0;
+    let topSellerProducts = 0;
+
+    Object.entries(sellerStats).forEach(([name, data]) => {
+      if (data.requests > topSellerRequests) {
+        topSellerRequests = data.requests;
+        topSellerProducts = data.products;
+        topSellerName = name;
+      }
+    });
+
+    return { total, pending, resolved, archived, resolutionRate, avgResolutionDays, avgResolutionMins, totalProducts, uniqueSellersCount, reportPeriodText, topSellerName, topSellerRequests, topSellerProducts };
   }, [filteredNotes, dateFrom, dateTo]);
 
   // ── Person Statistics ──
@@ -455,6 +478,9 @@ export function ReportingPanel() {
       ['Ort. Çözüm Süresi (Saat/Dakika)', stats.avgResolutionMins > 0 ? formatDuration(stats.avgResolutionMins) : '-'],
       ['İşlem Gören Ürün Adedi', stats.totalProducts],
       ['Tekil Satıcı Sayısı', stats.uniqueSellersCount],
+      ['En Çok Talep Gelen Satıcı', stats.topSellerName],
+      ['En Çok Satıcı Talep Sayısı', stats.topSellerRequests],
+      ['En Çok Satıcı Ürün Müdahalesi', stats.topSellerProducts],
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
     ws1['!cols'] = [{ wpx: 200 }, { wpx: 150 }];
@@ -866,6 +892,14 @@ export function ReportingPanel() {
               <div className="kpi-value" style={{ color: '#14b8a6' }}>{stats.totalProducts}</div>
               <div className="kpi-label">İşlem Gören Ürün</div>
               <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #14b8a6, #2dd4bf)' }} />
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-value" style={{ color: '#f43f5e', fontSize: '1.1rem', lineHeight: '1.2' }}>
+                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }} title={stats.topSellerName}>{stats.topSellerName}</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: 'normal' }}>{stats.topSellerProducts} Ürün Müdahale</div>
+              </div>
+              <div className="kpi-label">En Çok Talep: Satıcı</div>
+              <div className="kpi-bar" style={{ background: 'linear-gradient(90deg, #f43f5e, #fb7185)' }} />
             </div>
           </div>
 
