@@ -132,7 +132,7 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                     const value = typeof rawValue === 'boolean' || Array.isArray(rawValue) ? '' : rawValue as React.ReactNode;
 
                     return (
-                      <td key={col.id} style={{ minWidth: col.width, maxWidth: '200px', borderLeft: '1px solid var(--bg-hover)' }}>
+                      <td key={col.id} style={{ minWidth: col.width, borderLeft: '1px solid var(--bg-hover)' }}>
                         <div 
                           className="cell-wrapper"
                           style={{ minHeight: '3.5rem', padding: '0.75rem 1rem' }}
@@ -144,21 +144,37 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                           }}
                         >
                           {isEditing ? (
-                            <input 
+                            <textarea 
                               autoFocus
-                              type={col.type}
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
                               onBlur={() => {
                                 const finalVal = col.type === 'number' ? Number(editValue) : editValue;
                                 handleCommit(note.id, col.id, finalVal, false);
                               }}
-                              onKeyDown={(e) => handleKeyDown(e, note.id, col.id, col.type)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  const finalVal = col.type === 'number' ? Number(editValue) : editValue;
+                                  handleCommit(note.id, col.id, finalVal, true);
+                                } else if (e.key === 'Escape') {
+                                  setEditingCell(null);
+                                }
+                              }}
                               className="cell-input-active"
-                              style={{ padding: '0 1rem', borderRadius: '4px' }}
+                              style={{ width: '100%', minHeight: '60px', padding: '0.5rem', borderRadius: '4px', resize: 'vertical' }}
                             />
                           ) : (
-                            <div className="cell-content" style={{ fontSize: '0.875rem', color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }} title={String(value || '')}>
+                            <div 
+                              className="cell-content" 
+                              style={{ 
+                                fontSize: '0.875rem', 
+                                color: value ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                lineHeight: '1.4'
+                              }}
+                            >
                               {col.type === 'date' && value ? new Date(value as string).toLocaleDateString('tr-TR') : value}
                             </div>
                           )}

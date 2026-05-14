@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter, TrendingUp } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter, TrendingUp, Calendar, ChevronDown } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 import { IssuesGrid } from './IssuesGrid';
 import { ReportingPanel } from './ReportingPanel';
@@ -266,29 +266,33 @@ export function Dashboard() {
     <div className="container-fluid" style={{ maxWidth: '100%', margin: '0', padding: '1.5rem 1rem' }}>
       {/* Üst Kısım: Kurumsal Header */}
       <div className="flex justify-between items-center mb-8" style={{ background: 'var(--bg-panel)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 pr-6" style={{ borderRight: '2px solid var(--bg-hover)' }}>
-               <img 
-                 src="https://idefix.akinoncdn.com/static_omnishop/idefix201/img/idefix-logo-svg.svg" 
-                 alt="Idefix Logo" 
-                 style={{ height: '36px', objectFit: 'contain' }} 
-               />
-               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>Takip Paneli</span>
+          <div className="flex items-center gap-10">
+            <div className="flex items-center gap-4 pr-10" style={{ borderRight: '2px solid var(--border-color)' }}>
+               <div style={{ background: 'linear-gradient(135deg, var(--primary-color), #4f46e5)', padding: '0.6rem', borderRadius: '12px', color: '#fff', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>
+                 <TrendingUp size={24} />
+               </div>
+               <div className="flex flex-col">
+                 <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1 }}>Takip Paneli</span>
+                 <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginTop: '2px' }}>Professional Tracking</span>
+               </div>
             </div>
-            <div className="flex items-center gap-2">
-               <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Çalışma Alanı:</span>
-               <select 
-                className="form-select" 
-                style={{ width: 'auto', minWidth: '250px', fontWeight: 600, border: 'none', background: 'var(--bg-hover)', borderRadius: '8px' }}
-                value={activeWorkspace || ''}
-                onChange={(e) => setActiveWorkspace(e.target.value)}
-              >
-                {availableWorkspaces.map(ws => (
-                  <option key={ws} value={ws}>
-                    {ws === currentUserEmail ? 'Kişisel Panelim' : `${ws} (Paylaşılan)`}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-3">
+               <div className="flex flex-col">
+                 <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mevcut Çalışma Alanı</span>
+                 <select 
+                  className="form-select" 
+                  style={{ width: 'auto', minWidth: '280px', fontWeight: 700, border: 'none', background: 'transparent', padding: '0', fontSize: '1rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+                  value={activeWorkspace || ''}
+                  onChange={(e) => setActiveWorkspace(e.target.value)}
+                >
+                  {availableWorkspaces.map(ws => (
+                    <option key={ws} value={ws}>
+                      {ws === currentUserEmail ? 'Kişisel Panelim' : `${ws} (Paylaşılan)`}
+                    </option>
+                  ))}
+                </select>
+               </div>
+               <ChevronDown size={16} style={{ color: 'var(--text-secondary)', marginTop: '12px' }} />
             </div>
           </div>
          <div className="flex items-center gap-4">
@@ -309,24 +313,42 @@ export function Dashboard() {
          </div>
       </div>
 
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
-            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & Analiz'}
-          </h1>
-          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-            {mode === 'seller' ? 'Operasyonel süreçlerinizi ve satıcı taleplerini profesyonel düzeyde takip edin.' : mode === 'issues' ? 'Sistem sorunlarını kaydedin ve çözüm süreçlerini yönetin.' : 'Veriye dayalı kararlar için gelişmiş istatistikler.'}
-          </p>
-        </div>
-        <div className="flex items-center gap-6">
-           <div className="flex flex-col items-end px-6" style={{ borderRight: '2px solid var(--border-color)' }}>
-             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Aktif Dönem</span>
-             <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{viewMode === 'all' ? 'TÜM ZAMANLAR' : selectedMonth}</span>
-           </div>
-           <div style={{ paddingLeft: '1.5rem', textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-resolved)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Genel İlerleme</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>%{progress}</div>
-           </div>
+      <div className="mb-10 p-10" style={{ background: 'linear-gradient(to right, #f8fafc, #fff)', borderRadius: '24px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="flex justify-between items-center">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              <div style={{ width: '32px', height: '4px', background: 'var(--primary-color)', borderRadius: '2px' }}></div>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Dashboard Overview</span>
+            </div>
+            <h1 style={{ fontSize: '2.75rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '0.75rem', letterSpacing: '-0.04em' }}>
+              {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & Analiz'}
+            </h1>
+            <p style={{ fontSize: '1.125rem', color: 'var(--text-secondary)', fontWeight: 500, maxWidth: '600px', lineHeight: '1.6' }}>
+              {mode === 'seller' ? 'Operasyonel süreçlerinizi ve satıcı taleplerini profesyonel düzeyde takip edin.' : mode === 'issues' ? 'Sistem sorunlarını kaydedin ve çözüm süreçlerini yönetin.' : 'Veriye dayalı kararlar için gelişmiş istatistikler.'}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-12">
+             <div className="flex flex-col items-end">
+               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Aktif İzleme Dönemi</span>
+               <div className="flex items-center gap-3">
+                 <Calendar size={20} style={{ color: 'var(--primary-color)' }} />
+                 <span style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)' }}>{viewMode === 'all' ? 'TÜM ZAMANLAR' : selectedMonth}</span>
+               </div>
+             </div>
+             
+             <div style={{ width: '2px', height: '60px', background: 'var(--border-color)' }}></div>
+             
+             <div className="flex flex-col items-end">
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--status-resolved)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Başarı Oranı</span>
+                <div className="flex items-center gap-3">
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '4px solid var(--status-resolved-bg)', borderTopColor: 'var(--status-resolved)', display: 'flex', alignItems: 'center', justifyItems: 'center', padding: '10px' }}>
+                     <span style={{ fontSize: '0.7rem', fontWeight: 900 }}>%{progress}</span>
+                  </div>
+                  <span style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-primary)' }}>%{progress}</span>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
 

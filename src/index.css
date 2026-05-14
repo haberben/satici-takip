@@ -33,6 +33,7 @@
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+  --container-width: 100%;
 }
 
 * {
@@ -180,11 +181,11 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
   white-space: nowrap;
 }
 
-.data-table td {
+.data-table th, .data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
   border-bottom: 1px solid var(--border-color);
-  position: relative;
-  background: var(--bg-panel);
-  transition: background-color 0.1s ease;
+  font-size: 0.8125rem;
 }
 
 .data-table tr.row-bg-pending td {
