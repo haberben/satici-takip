@@ -52,15 +52,6 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
     setEditingCell(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, rowId: string, colId: keyof SellerNote, type: string) => {
-    if (e.key === 'Enter' || e.key === 'Tab') {
-      e.preventDefault();
-      const finalVal = type === 'number' ? Number(editValue) : editValue;
-      handleCommit(rowId, colId, finalVal, true);
-    } else if (e.key === 'Escape') {
-      setEditingCell(null);
-    }
-  };
 
   const handleRestore = (noteId: string, previousState: Partial<SellerNote>) => {
     if (confirm('Bu sürüme dönmek istediğinize emin misiniz?')) {
