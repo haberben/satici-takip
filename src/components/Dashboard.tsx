@@ -11,7 +11,11 @@ import { ShareModal } from './ShareModal';
 
 
 export function Dashboard() {
-  const { notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, setActiveWorkspace, user, signOut, workspacePermissions } = useStore();
+  const { 
+    notes, issues, addNote, addIssue, activeWorkspace, availableWorkspaces, 
+    setActiveWorkspace, user, signOut, workspacePermissions,
+    selectedMonth, viewMode, setSelectedMonth, setViewMode
+  } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit' || activeWorkspace === currentUserEmail;
   const isOwner = activeWorkspace === currentUserEmail || !activeWorkspace;
@@ -38,44 +42,54 @@ export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const columnConfig = useColumnConfig(activeWorkspace);
 
-  const pendingCount = notes.filter(n => n.status === 'pending').length;
-  const resolvedCount = notes.filter(n => n.status === 'resolved').length;
-  const archivedCount = notes.filter(n => n.status === 'archived').length;
-  const activeCount = notes.filter(n => n.status !== 'archived').length;
-  const progress = Math.round((resolvedCount / Math.max(activeCount, 1)) * 100);
+  const pendingCount = useMemo(() => filteredNotes.filter(n => n.status === 'pending').length, [filteredNotes]);
+  const resolvedCount = useMemo(() => filteredNotes.filter(n => n.status === 'resolved').length, [filteredNotes]);
+  const archivedCount = useMemo(() => filteredNotes.filter(n => n.status === 'archived').length, [filteredNotes]);
+  const activeCount = useMemo(() => filteredNotes.filter(n => n.status !== 'archived').length, [filteredNotes]);
+  const progress = useMemo(() => Math.round((resolvedCount / Math.max(activeCount, 1)) * 100), [resolvedCount, activeCount]);
 
-  const filteredNotes = notes.filter(note => {
-    const s = normalizeTurkish(searchTerm);
-    const matchesSearch = 
-      normalizeTurkish(note.storeName).includes(s) || 
-      normalizeTurkish(note.sellerName).includes(s) ||
-      normalizeTurkish(note.fromWhom).includes(s) ||
-      normalizeTurkish(note.subject).includes(s);
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => {
+      const s = normalizeTurkish(searchTerm);
+      const matchesSearch = 
+        normalizeTurkish(note.storeName).includes(s) || 
+        normalizeTurkish(note.sellerName).includes(s) ||
+        normalizeTurkish(note.fromWhom).includes(s) ||
+        normalizeTurkish(note.subject).includes(s);
+        
+      const fs = normalizeTurkish(filterSeller);
+      const matchesSeller = filterSeller
+        ? normalizeTurkish(note.sellerName).includes(fs) ||
+          normalizeTurkish(note.fromWhom).includes(fs)
+        : true;
+      const matchesDate = filterDate ? note.requestDate === filterDate : true;
       
-    const fs = normalizeTurkish(filterSeller);
-    const matchesSeller = filterSeller
-      ? normalizeTurkish(note.sellerName).includes(fs) ||
-        normalizeTurkish(note.fromWhom).includes(fs)
-      : true;
-    const matchesDate = filterDate ? note.requestDate === filterDate : true;
-    
-    const isMatch = matchesSearch && matchesSeller && matchesDate;
-    if (filter === 'all') return isMatch && note.status !== 'archived';
-    return isMatch && note.status === filter;
-  });
+      // Monthly Filter
+      const matchesMonth = viewMode === 'all' ? true : (note.requestDate?.startsWith(selectedMonth));
 
-  const filteredIssues = issues.filter(issue => {
-    const s = normalizeTurkish(searchTerm);
-    const matchesSearch = 
-      normalizeTurkish(issue.issue_text).includes(s) ||
-      normalizeTurkish(issue.solution_text).includes(s);
-    
-    const matchesDate = filterDate ? issue.created_at === filterDate : true;
-    
-    const isMatch = matchesSearch && matchesDate;
-    if (filter === 'all') return isMatch && issue.status !== 'archived';
-    return isMatch && issue.status === filter;
-  });
+      const isMatch = matchesSearch && matchesSeller && matchesDate && matchesMonth;
+      if (filter === 'all') return isMatch && note.status !== 'archived';
+      return isMatch && note.status === filter;
+    });
+  }, [notes, searchTerm, filterSeller, filterDate, selectedMonth, viewMode, filter]);
+
+  const filteredIssues = useMemo(() => {
+    return issues.filter(issue => {
+      const s = normalizeTurkish(searchTerm);
+      const matchesSearch = 
+        normalizeTurkish(issue.issue_text).includes(s) ||
+        normalizeTurkish(issue.solution_text).includes(s);
+      
+      const matchesDate = filterDate ? issue.created_at === filterDate : true;
+      
+      // Monthly Filter
+      const matchesMonth = viewMode === 'all' ? true : (issue.created_at?.startsWith(selectedMonth));
+
+      const isMatch = matchesSearch && matchesDate && matchesMonth;
+      if (filter === 'all') return isMatch && issue.status !== 'archived';
+      return isMatch && issue.status === filter;
+    });
+  }, [issues, searchTerm, filterDate, selectedMonth, viewMode, filter]);
 
   const currentDataLength = mode === 'seller' ? filteredNotes.length : filteredIssues.length;
   const totalPages = Math.ceil(currentDataLength / itemsPerPage);
@@ -286,6 +300,45 @@ export function Dashboard() {
              </button>
            </div>
          </div>
+      </div>
+
+      {/* Ay Seçici & Panel Görünümü */}
+      <div className="flex justify-between items-center mb-4 p-2" style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-lg)' }}>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-1 p-1 rounded-lg bg-white" style={{ border: '1px solid var(--border-color)' }}>
+            <button
+              onClick={() => setViewMode('monthly')}
+              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'monthly' ? 'bg-primary-color text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              Aylık Görünüm
+            </button>
+            <button
+              onClick={() => setViewMode('all')}
+              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'all' ? 'bg-primary-color text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              Tümünü Gör
+            </button>
+          </div>
+          
+          {viewMode === 'monthly' && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600">Dönem Seç:</span>
+              <input 
+                type="month" 
+                className="form-input" 
+                style={{ padding: '0.4rem 0.8rem', width: '160px', height: '36px' }}
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+           <span className="text-xs font-bold px-2 py-1 rounded bg-primary-light text-primary-color">
+             {viewMode === 'all' ? 'TÜM KAYITLAR' : `${selectedMonth} DÖNEMİ`}
+           </span>
+        </div>
       </div>
 
       <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>

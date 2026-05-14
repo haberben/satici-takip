@@ -37,10 +37,18 @@ interface StoreState {
   deleteIssue: (id: string) => Promise<void>;
   bulkDeleteIssues: (ids: string[]) => Promise<void>;
   markIssueReminderSent: (id: string) => Promise<void>;
+  
+  // Monthly filtering
+  selectedMonth: string;
+  viewMode: 'monthly' | 'all';
+  setSelectedMonth: (month: string) => void;
+  setViewMode: (mode: 'monthly' | 'all') => void;
 }
 
 let activeChannel: any = null;
 let activeIssueChannel: any = null;
+let subscribedWorkspace: string | null = null;
+let subscribedIssueWorkspace: string | null = null;
 
 export const useStore = create<StoreState>((set, get) => ({
   notes: [],
@@ -53,6 +61,11 @@ export const useStore = create<StoreState>((set, get) => ({
   shares: [],
   user: null,
   issues: [],
+  selectedMonth: new Date().toISOString().slice(0, 7), // YYYY-MM
+  viewMode: 'monthly',
+
+  setSelectedMonth: (month) => set({ selectedMonth: month }),
+  setViewMode: (mode) => set({ viewMode: mode }),
 
   checkAuth: async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -146,10 +159,14 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     set({ isLoading: false });
 
-    // Realtime Aboneliği
+    // Realtime Aboneliği - Sadece workspace değiştiyse yenile
+    if (subscribedWorkspace === activeWorkspace && activeChannel) return;
+
     if (activeChannel) {
        supabase.removeChannel(activeChannel);
     }
+    
+    subscribedWorkspace = activeWorkspace;
     
     activeChannel = supabase.channel(`public:notes:${activeWorkspace}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notes', filter: `owner_email=eq.${activeWorkspace}` }, (payload) => {
@@ -182,9 +199,13 @@ export const useStore = create<StoreState>((set, get) => ({
       set({ issues: data as IssueNote[] });
     }
 
+    if (subscribedIssueWorkspace === activeWorkspace && activeIssueChannel) return;
+
     if (activeIssueChannel) {
        supabase.removeChannel(activeIssueChannel);
     }
+    
+    subscribedIssueWorkspace = activeWorkspace;
     
     activeIssueChannel = supabase.channel(`public:issues:${activeWorkspace}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'issues', filter: `owner_email=eq.${activeWorkspace}` }, (payload) => {

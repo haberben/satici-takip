@@ -240,11 +240,25 @@ function LineChart({ data, color, height = 140 }: { data: { label: string; value
 
 // ── Main Component ──
 export function ReportingPanel() {
-  const { notes, globalNote } = useStore();
+  const { notes, globalNote, selectedMonth, viewMode } = useStore();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [personFilter, setPersonFilter] = useState('');
-  const [activeSection, setActiveSection] = useState<'overview' | 'people' | 'timeline'>('overview');
+  const [activeSection, setActiveSection] = useState<'overview' | 'people' | 'timeline' | 'alltime'>('overview');
+
+  // Initialize filters based on store selectedMonth
+  useEffect(() => {
+    if (viewMode === 'monthly' && selectedMonth) {
+      setDateFrom(`${selectedMonth}-01`);
+      // Last day of month
+      const [y, m] = selectedMonth.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      setDateTo(`${selectedMonth}-${String(lastDay).padStart(2, '0')}`);
+    } else {
+      setDateFrom('');
+      setDateTo('');
+    }
+  }, [selectedMonth, viewMode]);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -455,6 +469,20 @@ export function ReportingPanel() {
       if (n.storeName) set.add(n.storeName);
     });
     return Array.from(set).sort();
+  }, [notes]);
+
+  // ── All Time Monthly Comparison ──
+  const allTimeMonthlyStats = useMemo(() => {
+    const map: Record<string, { month: string, count: number, resolved: number, products: number }> = {};
+    notes.forEach(n => {
+      if (!n.requestDate) return;
+      const m = n.requestDate.slice(0, 7); // YYYY-MM
+      if (!map[m]) map[m] = { month: m, count: 0, resolved: 0, products: 0 };
+      map[m].count++;
+      if (n.status === 'resolved') map[m].resolved++;
+      map[m].products += (Number(n.productCount) || 1);
+    });
+    return Object.values(map).sort((a, b) => a.month.localeCompare(b.month));
   }, [notes]);
 
   // ── Export Functions ──
@@ -849,6 +877,9 @@ export function ReportingPanel() {
         <button className={`report-nav-btn ${activeSection === 'timeline' ? 'active' : ''}`} onClick={() => setActiveSection('timeline')}>
           <TrendingUp size={16} /> Zaman Çizelgesi
         </button>
+        <button className={`report-nav-btn ${activeSection === 'alltime' ? 'active' : ''}`} onClick={() => setActiveSection('alltime')}>
+          <BarChart3 size={16} /> Tüm Zamanlar
+        </button>
       </div>
 
       {/* ── Overview Section ── */}
@@ -1062,6 +1093,75 @@ export function ReportingPanel() {
                 ))}
                 {timelineStats.length === 0 && (
                   <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Gösterilecek veri yok</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── All Time Section ── */}
+      {activeSection === 'alltime' && (
+        <div className="report-section fade-in">
+          <div className="chart-card" style={{ marginBottom: '1.5rem' }}>
+            <h4 className="chart-title">Aylık Talep Dağılımı (Tüm Zamanlar)</h4>
+            <MiniBarChart
+              data={allTimeMonthlyStats.map(m => ({ label: m.month, value: m.count }))}
+              color="#6366f1"
+              height={200}
+            />
+          </div>
+
+          <div className="chart-row">
+            <div className="chart-card" style={{ flex: 1 }}>
+              <h4 className="chart-title">Aylık Çözülen Talepler</h4>
+              <LineChart
+                data={allTimeMonthlyStats.map(m => ({ label: m.month, value: m.resolved }))}
+                color="#10b981"
+                height={160}
+              />
+            </div>
+            <div className="chart-card" style={{ flex: 1 }}>
+              <h4 className="chart-title">Aylık Müdahale Edilen Ürün</h4>
+              <LineChart
+                data={allTimeMonthlyStats.map(m => ({ label: m.month, value: m.products }))}
+                color="#f43f5e"
+                height={160}
+              />
+            </div>
+          </div>
+
+          <div className="people-table-wrap" style={{ marginTop: '1.5rem' }}>
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Ay / Dönem</th>
+                  <th>Toplam Talep</th>
+                  <th>Çözülen</th>
+                  <th>Müdahale Ürün</th>
+                  <th>Çözüm Oranı</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allTimeMonthlyStats.map(m => {
+                  const rate = m.count > 0 ? Math.round((m.resolved / m.count) * 100) : 0;
+                  return (
+                    <tr key={m.month}>
+                      <td style={{ fontWeight: 600 }}>{m.month}</td>
+                      <td><strong>{m.count}</strong></td>
+                      <td><span className="badge badge-resolved">{m.resolved}</span></td>
+                      <td>{m.products}</td>
+                      <td>
+                        <div className="rate-bar-wrap">
+                          <div className="rate-bar" style={{ width: `${rate}%`, background: '#10b981' }} />
+                          <span>%{rate}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {allTimeMonthlyStats.length === 0 && (
+                  <tr><td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Henüz veri yok</td></tr>
                 )}
               </tbody>
             </table>
