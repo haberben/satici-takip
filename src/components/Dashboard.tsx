@@ -261,11 +261,6 @@ export function Dashboard() {
     }
   };
 
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-
-  const handleShare = () => {
-    setIsShareModalOpen(true);
-  };
 
   return (
     <div className="container-fluid" style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem' }}>
@@ -387,6 +382,24 @@ export function Dashboard() {
                     )}
                   </div>
                   <button className="btn btn-outline" onClick={() => exportToExcel(false)}><Download size={18} /> Dışa Aktar</button>
+                  {mode === 'seller' && (
+                    <>
+                      <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
+                      <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
+                        <Upload size={18} /> İçe Aktar
+                      </button>
+                      <ColumnSettingsPanel
+                        columns={columnConfig.columns}
+                        renameColumn={columnConfig.renameColumn}
+                        toggleColumn={columnConfig.toggleColumn}
+                        moveColumn={columnConfig.moveColumn}
+                        resetColumns={columnConfig.resetColumns}
+                      />
+                    </>
+                  )}
+                  <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
+                    <BookOpen size={18} /> Serbest Defter
+                  </button>
                   {hasEditPermission && (
                     <button className="btn btn-primary" onClick={handleAddNewRow}><Plus size={18} /> Yeni Kayıt</button>
                   )}
