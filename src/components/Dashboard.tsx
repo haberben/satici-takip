@@ -271,21 +271,31 @@ export function Dashboard() {
     <div className="container-fluid" style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem' }}>
       {/* Üst Kısım: Kurumsal Header */}
       <div className="flex justify-between items-center mb-8" style={{ background: 'var(--bg-panel)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
-         <div className="flex items-center gap-2">
-            <span style={{ fontWeight: 600 }}>Çalışma Alanı:</span>
-             <select 
-              className="form-select" 
-              style={{ width: 'auto', minWidth: '300px', fontWeight: 600, border: 'none', background: 'var(--bg-hover)', borderRadius: '8px' }}
-              value={activeWorkspace || ''}
-              onChange={(e) => setActiveWorkspace(e.target.value)}
-            >
-              {availableWorkspaces.map(ws => (
-                <option key={ws} value={ws}>
-                  {ws === currentUserEmail ? 'Kişisel Panelim ('+ws+')' : `${ws} (Paylaşılan)`}
-                </option>
-              ))}
-            </select>
-         </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 pr-6" style={{ borderRight: '2px solid var(--bg-hover)' }}>
+               <img 
+                 src="https://idefix.akinoncdn.com/static_omnishop/idefix201/img/idefix-logo-svg.svg" 
+                 alt="Idefix Logo" 
+                 style={{ height: '32px', filter: 'brightness(1)' }} 
+               />
+               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Takip Paneli</span>
+            </div>
+            <div className="flex items-center gap-2">
+               <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Çalışma Alanı:</span>
+               <select 
+                className="form-select" 
+                style={{ width: 'auto', minWidth: '250px', fontWeight: 600, border: 'none', background: 'var(--bg-hover)', borderRadius: '8px' }}
+                value={activeWorkspace || ''}
+                onChange={(e) => setActiveWorkspace(e.target.value)}
+              >
+                {availableWorkspaces.map(ws => (
+                  <option key={ws} value={ws}>
+                    {ws === currentUserEmail ? 'Kişisel Panelim' : `${ws} (Paylaşılan)`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
          <div className="flex items-center gap-4">
            {activeWorkspace === currentUserEmail && (
              <button className="btn btn-outline" onClick={handleShare}>
