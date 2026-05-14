@@ -263,17 +263,17 @@ export function Dashboard() {
 
 
   return (
-    <div className="container-fluid" style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem' }}>
+    <div className="container-fluid" style={{ maxWidth: '1600px', margin: '0 auto', padding: '3rem 2rem' }}>
       {/* Üst Kısım: Kurumsal Header */}
       <div className="flex justify-between items-center mb-8" style={{ background: 'var(--bg-panel)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 pr-6" style={{ borderRight: '2px solid var(--bg-hover)' }}>
+            <div className="flex items-center gap-4 pr-6" style={{ borderRight: '2px solid var(--bg-hover)' }}>
                <img 
                  src="https://idefix.akinoncdn.com/static_omnishop/idefix201/img/idefix-logo-svg.svg" 
                  alt="Idefix Logo" 
-                 style={{ height: '32px', filter: 'brightness(1)' }} 
+                 style={{ height: '36px', objectFit: 'contain' }} 
                />
-               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Takip Paneli</span>
+               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>Takip Paneli</span>
             </div>
             <div className="flex items-center gap-2">
                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Çalışma Alanı:</span>
@@ -319,13 +319,13 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-6">
-           <div className="flex flex-col items-end">
-             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktif Dönem</span>
-             <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{viewMode === 'all' ? 'TÜM ZAMANLAR' : selectedMonth}</span>
+           <div className="flex flex-col items-end px-6" style={{ borderRight: '2px solid var(--border-color)' }}>
+             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Aktif Dönem</span>
+             <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>{viewMode === 'all' ? 'TÜM ZAMANLAR' : selectedMonth}</span>
            </div>
-           <div style={{ paddingLeft: '1.5rem', borderLeft: '2px solid var(--border-color)', textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-resolved)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Genel İlerleme</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>%{progress}</div>
+           <div style={{ paddingLeft: '1.5rem', textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-resolved)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Genel İlerleme</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>%{progress}</div>
            </div>
         </div>
       </div>
@@ -355,15 +355,15 @@ export function Dashboard() {
           </button>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6 flex-wrap">
           {mode !== 'reporting' && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               {selectedIds.length > 0 ? (
-                <div className="flex items-center gap-3 bg-danger-light p-1 px-3 rounded-lg border border-red-200">
-                   <span style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.85rem' }}>{selectedIds.length} Kayıt Seçildi</span>
-                   <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem' }} onClick={() => exportToExcel(true)}>İndir</button>
+                <div className="flex items-center gap-4 bg-danger-light p-2 px-4 rounded-xl border border-red-200 shadow-sm">
+                   <span style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.9rem' }}>{selectedIds.length} Kayıt Seçildi</span>
+                   <button className="btn btn-outline" style={{ background: '#fff' }} onClick={() => exportToExcel(true)}>İndir</button>
                    {hasEditPermission && (
-                     <button className="btn" style={{ background: 'var(--danger)', color: '#fff', padding: '0.4rem 0.8rem' }} onClick={() => {
+                     <button className="btn" style={{ background: 'var(--danger)', color: '#fff' }} onClick={() => {
                         if(confirm(`${selectedIds.length} kaydı silmek istediğinize emin misiniz?`)){
                           if (mode === 'seller') useStore.getState().bulkDeleteNotes(selectedIds);
                           else useStore.getState().bulkDeleteIssues(selectedIds);
@@ -373,37 +373,64 @@ export function Dashboard() {
                    )}
                 </div>
               ) : (
-                <>
-                  <div className="flex items-center gap-2 mr-2">
-                    <button className={`btn btn-outline ${viewMode === 'monthly' ? 'active' : ''}`} style={{ background: viewMode === 'monthly' ? 'var(--bg-hover)' : 'transparent' }} onClick={() => setViewMode('monthly')}>Aylık</button>
-                    <button className={`btn btn-outline ${viewMode === 'all' ? 'active' : ''}`} style={{ background: viewMode === 'all' ? 'var(--bg-hover)' : 'transparent' }} onClick={() => setViewMode('all')}>Tümü</button>
+                <div className="flex items-center gap-6">
+                  {/* Dönem Filtresi Grubu */}
+                  <div className="flex items-center gap-2 p-1.5 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <button 
+                      className={`btn btn-sm ${viewMode === 'monthly' ? 'btn-primary' : 'btn-outline'}`} 
+                      style={{ border: 'none', padding: '0.5rem 1rem', background: viewMode === 'monthly' ? 'var(--primary-color)' : 'transparent', color: viewMode === 'monthly' ? '#fff' : 'var(--text-secondary)' }} 
+                      onClick={() => setViewMode('monthly')}
+                    >
+                      Aylık
+                    </button>
+                    <button 
+                      className={`btn btn-sm ${viewMode === 'all' ? 'btn-primary' : 'btn-outline'}`} 
+                      style={{ border: 'none', padding: '0.5rem 1rem', background: viewMode === 'all' ? 'var(--primary-color)' : 'transparent', color: viewMode === 'all' ? '#fff' : 'var(--text-secondary)' }} 
+                      onClick={() => setViewMode('all')}
+                    >
+                      Tümü
+                    </button>
                     {viewMode === 'monthly' && (
-                      <input type="month" className="form-input" style={{ width: '150px', height: '38px' }} value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
+                      <input type="month" className="form-input" style={{ width: '150px', height: '32px', fontSize: '0.875rem', marginLeft: '0.5rem' }} value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
                     )}
                   </div>
-                  <button className="btn btn-outline" onClick={() => exportToExcel(false)}><Download size={18} /> Dışa Aktar</button>
-                  {mode === 'seller' && (
-                    <>
-                      <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
-                      <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
-                        <Upload size={18} /> İçe Aktar
-                      </button>
-                      <ColumnSettingsPanel
-                        columns={columnConfig.columns}
-                        renameColumn={columnConfig.renameColumn}
-                        toggleColumn={columnConfig.toggleColumn}
-                        moveColumn={columnConfig.moveColumn}
-                        resetColumns={columnConfig.resetColumns}
-                      />
-                    </>
-                  )}
-                  <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
-                    <BookOpen size={18} /> Serbest Defter
-                  </button>
+
+                  {/* İşlem Butonları Grubu */}
+                  <div className="flex items-center gap-3">
+                    <button className="btn btn-outline shadow-sm" style={{ background: '#fff', padding: '0.6rem' }} onClick={() => exportToExcel(false)} title="Excel Dışa Aktar">
+                      <Download size={20} />
+                    </button>
+                    {mode === 'seller' && (
+                      <>
+                        <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />
+                        <button className="btn btn-outline shadow-sm" style={{ background: '#fff', padding: '0.6rem' }} onClick={() => fileInputRef.current?.click()} title="CSV İçe Aktar">
+                          <Upload size={20} />
+                        </button>
+                        <div className="shadow-sm rounded-lg overflow-hidden">
+                          <ColumnSettingsPanel
+                            columns={columnConfig.columns}
+                            renameColumn={columnConfig.renameColumn}
+                            toggleColumn={columnConfig.toggleColumn}
+                            moveColumn={columnConfig.moveColumn}
+                            resetColumns={columnConfig.resetColumns}
+                          />
+                        </div>
+                      </>
+                    )}
+                    <button className="btn btn-outline shadow-sm" style={{ background: '#fff', padding: '0.6rem' }} onClick={() => setIsSidebarOpen(true)} title="Serbest Defter">
+                      <BookOpen size={20} />
+                    </button>
+                  </div>
+
+                  <div style={{ width: '2px', height: '30px', background: 'var(--border-color)', margin: '0 0.5rem' }}></div>
+
+                  {/* Yeni Kayıt Grubu */}
                   {hasEditPermission && (
-                    <button className="btn btn-primary" onClick={handleAddNewRow}><Plus size={18} /> Yeni Kayıt</button>
+                    <button className="btn btn-primary shadow-lg" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 700, gap: '0.75rem' }} onClick={handleAddNewRow}>
+                      <Plus size={20} /> Yeni Kayıt Ekle
+                    </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           )}
