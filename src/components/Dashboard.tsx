@@ -42,12 +42,6 @@ export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const columnConfig = useColumnConfig(activeWorkspace);
 
-  const pendingCount = useMemo(() => filteredNotes.filter(n => n.status === 'pending').length, [filteredNotes]);
-  const resolvedCount = useMemo(() => filteredNotes.filter(n => n.status === 'resolved').length, [filteredNotes]);
-  const archivedCount = useMemo(() => filteredNotes.filter(n => n.status === 'archived').length, [filteredNotes]);
-  const activeCount = useMemo(() => filteredNotes.filter(n => n.status !== 'archived').length, [filteredNotes]);
-  const progress = useMemo(() => Math.round((resolvedCount / Math.max(activeCount, 1)) * 100), [resolvedCount, activeCount]);
-
   const filteredNotes = useMemo(() => {
     return notes.filter(note => {
       const s = normalizeTurkish(searchTerm);
@@ -90,6 +84,12 @@ export function Dashboard() {
       return isMatch && issue.status === filter;
     });
   }, [issues, searchTerm, filterDate, selectedMonth, viewMode, filter]);
+
+  const pendingCount = useMemo(() => filteredNotes.filter(n => n.status === 'pending').length, [filteredNotes]);
+  const resolvedCount = useMemo(() => filteredNotes.filter(n => n.status === 'resolved').length, [filteredNotes]);
+  const archivedCount = useMemo(() => filteredNotes.filter(n => n.status === 'archived').length, [filteredNotes]);
+  const activeCount = useMemo(() => filteredNotes.filter(n => n.status !== 'archived').length, [filteredNotes]);
+  const progress = useMemo(() => Math.round((resolvedCount / Math.max(activeCount, 1)) * 100), [resolvedCount, activeCount]);
 
   const currentDataLength = mode === 'seller' ? filteredNotes.length : filteredIssues.length;
   const totalPages = Math.ceil(currentDataLength / itemsPerPage);
