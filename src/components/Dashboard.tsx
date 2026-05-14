@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { DataGrid } from './DataGrid';
-import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, BookOpen, Download, Share2, Upload, LogOut, User, Trash2, Filter, TrendingUp } from 'lucide-react';
 import { GlobalNotesSidebar } from './GlobalNotesSidebar';
 import { IssuesGrid } from './IssuesGrid';
 import { ReportingPanel } from './ReportingPanel';
@@ -18,8 +18,10 @@ export function Dashboard() {
   } = useStore();
   const currentUserEmail = user?.email || localStorage.getItem('saticiUserEmail') || '';
   const hasEditPermission = !activeWorkspace || workspacePermissions[activeWorkspace] === 'edit' || activeWorkspace === currentUserEmail;
-  const isOwner = activeWorkspace === currentUserEmail || !activeWorkspace;
-  const [mode, setMode] = useState<'seller' | 'issues' | 'reports'>('seller');
+  const [mode, setMode] = useState<'seller' | 'issues' | 'reporting'>('seller');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+  const handleShare = () => setIsShareModalOpen(true);
   
   const normalizeTurkish = (str: string) => {
     if (!str) return '';
@@ -357,7 +359,7 @@ export function Dashboard() {
                    <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem' }} onClick={() => exportToExcel(true)}>İndir</button>
                    {hasEditPermission && (
                      <button className="btn" style={{ background: 'var(--danger)', color: '#fff', padding: '0.4rem 0.8rem' }} onClick={() => {
-                        if(confirm('Seçili kayıtlar silinecek. Emin misiniz?')){
+                        if(confirm(`${selectedIds.length} kaydı silmek istediğinize emin misiniz?`)){
                           if (mode === 'seller') useStore.getState().bulkDeleteNotes(selectedIds);
                           else useStore.getState().bulkDeleteIssues(selectedIds);
                           setSelectedIds([]);
