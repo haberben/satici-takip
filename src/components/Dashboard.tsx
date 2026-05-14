@@ -263,7 +263,7 @@ export function Dashboard() {
 
 
   return (
-    <div className="container-fluid" style={{ maxWidth: '1600px', margin: '0 auto', padding: '3rem 2rem' }}>
+    <div className="container-fluid" style={{ maxWidth: '100%', margin: '0', padding: '1.5rem 1rem' }}>
       {/* Üst Kısım: Kurumsal Header */}
       <div className="flex justify-between items-center mb-8" style={{ background: 'var(--bg-panel)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
           <div className="flex items-center gap-6">
