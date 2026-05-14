@@ -1,34 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-app: #fafafa;
+  --bg-app: #f4f7fa;
   --bg-panel: #ffffff;
-  --border-color: #eaeaea;
-  --border-active: #888888;
-  --text-primary: #111111;
-  --text-secondary: #666666;
-  --accent-color: #000000;
-  --accent-hover: #333333;
-  --bg-hover: #f5f5f5;
+  --border-color: #e2e8f0;
+  --border-active: #3b82f6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --accent-color: #6366f1;
+  --bg-hover: #f1f5f9;
   
-  --status-pending: #f5a623;
-  --status-pending-bg: #fff6e5;
-  --status-resolved: #0070f3; /* Vercel Blue */
-  --status-resolved-bg: #e5f1ff;
-  --status-archived: #888888;
-  --status-archived-bg: #f5f5f5;
-  --danger: #e00;
-  --success: #0070f3;
+  --status-pending: #f59e0b;
+  --status-pending-bg: #fef3c7;
+  --status-resolved: #10b981;
+  --status-resolved-bg: #d1fae5;
+  --status-archived: #94a3b8;
+  --status-archived-bg: #f1f5f9;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --success: #10b981;
   
-  --row-bg-pending: rgba(239, 68, 68, 0.05); /* Harfiyen kırmızı tonu */
-  --row-bg-resolved: rgba(34, 197, 94, 0.1); /* Hafif yeşil */
+  --row-bg-pending: rgba(245, 158, 11, 0.03);
+  --row-bg-resolved: rgba(16, 185, 129, 0.04);
   
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
-  --shadow-md: 0 8px 30px rgba(0,0,0,0.04);
-  --shadow-lg: 0 12px 24px rgba(0,0,0,0.08);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 }
 
 * {
@@ -78,16 +82,18 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
   border: 1px solid transparent;
 }
 .btn-primary {
-  background: var(--accent-color);
+  background: var(--primary-color);
   color: #fff;
 }
-.btn-primary:hover { background: var(--accent-hover); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.39); transform: translateY(-1px); }
+
 .btn-outline {
   background: var(--bg-panel);
   border-color: var(--border-color);
   color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
-.btn-outline:hover { background: var(--bg-app); border-color: var(--border-active); }
+.btn-outline:hover { background: var(--bg-hover); border-color: var(--border-active); color: var(--primary-color); }
 .btn-icon {
   background: transparent;
   border: none;
@@ -131,9 +137,22 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
-.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 100%;
+  background: transparent;
+}
+.stat-card:hover { 
+  box-shadow: var(--shadow-premium); 
+  transform: translateY(-4px); 
+}
 
 /* Premium Grid Data Table */
 .data-table-wrapper {
@@ -230,17 +249,32 @@ p { color: var(--text-secondary); font-size: 0.875rem; }
 
 /* Badges */
 .status {
-  padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
 }
-.status-pending { background: var(--status-pending-bg); color: var(--status-pending); }
-.status-resolved { background: var(--status-resolved-bg); color: var(--status-resolved); }
-.status-archived { background: var(--status-archived-bg); color: var(--status-archived); }
+.status-pending { 
+  background: var(--status-pending-bg); 
+  color: var(--status-pending); 
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.status-resolved { 
+  background: var(--status-resolved-bg); 
+  color: var(--status-resolved); 
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.status-archived { 
+  background: var(--status-archived-bg); 
+  color: var(--status-archived); 
+  border-color: rgba(148, 163, 184, 0.2);
+}
 
 /* Toasts / Notifications */
 .save-toast {

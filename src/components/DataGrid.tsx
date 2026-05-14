@@ -111,16 +111,19 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                     />
                   </td>
                   <td>
-                    <select 
-                      className="cell-select"
-                      value={note.status}
-                      onChange={(e) => hasEditPermission && updateNote(note.id, { status: e.target.value as any })}
-                      disabled={!hasEditPermission}
-                    >
-                      <option value="pending">Devam Ediyor</option>
-                      <option value="resolved">Çözüldü</option>
-                      <option value="archived">Arşivle</option>
-                    </select>
+                    <div className={`status status-${note.status}`} style={{ width: '100%', padding: '0.2rem' }}>
+                      <select 
+                        className="cell-select"
+                        style={{ background: 'transparent', border: 'none', textAlign: 'center', cursor: hasEditPermission ? 'pointer' : 'default' }}
+                        value={note.status}
+                        onChange={(e) => hasEditPermission && updateNote(note.id, { status: e.target.value as any })}
+                        disabled={!hasEditPermission}
+                      >
+                        <option value="pending">Devam Ediyor</option>
+                        <option value="resolved">Çözüldü</option>
+                        <option value="archived">Arşivlendi</option>
+                      </select>
+                    </div>
                   </td>
                   
                   {columns.map(col => {
@@ -129,9 +132,10 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                     const value = typeof rawValue === 'boolean' || Array.isArray(rawValue) ? '' : rawValue as React.ReactNode;
 
                     return (
-                      <td key={col.id} style={{ minWidth: col.width, maxWidth: '150px' }}>
+                      <td key={col.id} style={{ minWidth: col.width, maxWidth: '200px', borderLeft: '1px solid var(--bg-hover)' }}>
                         <div 
                           className="cell-wrapper"
+                          style={{ minHeight: '3.5rem', padding: '0.75rem 1rem' }}
                           onDoubleClick={() => {
                             if (hasEditPermission) {
                               setEditingCell({ rowId: note.id, col: col.id });
@@ -151,9 +155,10 @@ export function DataGrid({ notes, selectedIds = [], setSelectedIds, visibleColum
                               }}
                               onKeyDown={(e) => handleKeyDown(e, note.id, col.id, col.type)}
                               className="cell-input-active"
+                              style={{ padding: '0 1rem', borderRadius: '4px' }}
                             />
                           ) : (
-                            <div className="cell-content truncate-text" title={String(value || '')}>
+                            <div className="cell-content" style={{ fontSize: '0.875rem', color: value ? 'var(--text-primary)' : 'var(--text-secondary)' }} title={String(value || '')}>
                               {col.type === 'date' && value ? new Date(value as string).toLocaleDateString('tr-TR') : value}
                             </div>
                           )}

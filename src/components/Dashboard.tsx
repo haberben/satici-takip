@@ -266,14 +266,14 @@ export function Dashboard() {
   };
 
   return (
-    <div className="container-fluid">
-      {/* Üst Kısım: Hesaplar & Paylaşım */}
-      <div className="flex justify-between items-center mb-4" style={{ background: 'var(--bg-panel)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="container-fluid" style={{ maxWidth: '1440px', margin: '0 auto', padding: '2rem' }}>
+      {/* Üst Kısım: Kurumsal Header */}
+      <div className="flex justify-between items-center mb-8" style={{ background: 'var(--bg-panel)', padding: '1.25rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
          <div className="flex items-center gap-2">
             <span style={{ fontWeight: 600 }}>Çalışma Alanı:</span>
-            <select 
+             <select 
               className="form-select" 
-              style={{ width: 'auto', minWidth: '250px' }}
+              style={{ width: 'auto', minWidth: '300px', fontWeight: 600, border: 'none', background: 'var(--bg-hover)', borderRadius: '8px' }}
               value={activeWorkspace || ''}
               onChange={(e) => setActiveWorkspace(e.target.value)}
             >
@@ -302,183 +302,138 @@ export function Dashboard() {
          </div>
       </div>
 
-      {/* Ay Seçici & Panel Görünümü */}
-      <div className="flex justify-between items-center mb-4 p-2" style={{ background: 'var(--bg-hover)', borderRadius: 'var(--radius-lg)' }}>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-1 p-1 rounded-lg bg-white" style={{ border: '1px solid var(--border-color)' }}>
-            <button
-              onClick={() => setViewMode('monthly')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'monthly' ? 'bg-primary-color text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              Aylık Görünüm
-            </button>
-            <button
-              onClick={() => setViewMode('all')}
-              className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'all' ? 'bg-primary-color text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              Tümünü Gör
-            </button>
-          </div>
-          
-          {viewMode === 'monthly' && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Dönem Seç:</span>
-              <input 
-                type="month" 
-                className="form-input" 
-                style={{ padding: '0.4rem 0.8rem', width: '160px', height: '36px' }}
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-           <span className="text-xs font-bold px-2 py-1 rounded bg-primary-light text-primary-color">
-             {viewMode === 'all' ? 'TÜM KAYITLAR' : `${selectedMonth} DÖNEMİ`}
-           </span>
-        </div>
-      </div>
-
-      <div className="header" style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ flex: '1 1 300px' }}>
-          <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-hover)', flexWrap: 'wrap', borderRadius: '0.5rem', padding: '0.25rem' }}>
-            <button
-              onClick={() => setMode('seller')}
-              style={{
-                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                background: mode === 'seller' ? 'var(--bg-panel)' : 'transparent',
-                color: mode === 'seller' ? 'var(--primary-color)' : 'var(--text-secondary)',
-                boxShadow: mode === 'seller' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
-              }}
-            >
-              Satıcı Takip
-            </button>
-            <button
-              onClick={() => setMode('issues')}
-              style={{
-                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                background: mode === 'issues' ? 'var(--bg-panel)' : 'transparent',
-                color: mode === 'issues' ? 'var(--primary-color)' : 'var(--text-secondary)',
-                boxShadow: mode === 'issues' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
-              }}
-            >
-              Genel Sorunlar
-            </button>
-            <button
-              onClick={() => setMode('reports')}
-              style={{
-                padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                background: mode === 'reports' ? 'var(--bg-panel)' : 'transparent',
-                color: mode === 'reports' ? 'var(--primary-color)' : 'var(--text-secondary)',
-                boxShadow: mode === 'reports' ? '0 1px 2px 0 rgba(0,0,0,0.05)' : 'none'
-              }}
-            >
-              Raporlama
-            </button>
-            {isOwner && (
-              <>
-              </>
-            )}
-          </div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.5px', marginTop: '0.5rem' }}>
-            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & İstatistikler'}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem', letterSpacing: '-0.03em' }}>
+            {mode === 'seller' ? 'Satıcı & Mağaza Yönetimi' : mode === 'issues' ? 'Ar-Ge & Sorun Yönetimi' : 'Raporlama & Analiz'}
           </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            {mode === 'seller' ? 'Taleplerinizi ve hatırlatıcılarınızı profesyonel Excel görünümünde yönetin.' : mode === 'issues' ? 'Karşılaşılan sorunları raporlayın ve çözüm yollarını arşivleyin.' : 'Detaylı analizler, grafikler ve profesyonel raporlar.'}
+          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            {mode === 'seller' ? 'Operasyonel süreçlerinizi ve satıcı taleplerini profesyonel düzeyde takip edin.' : mode === 'issues' ? 'Sistem sorunlarını kaydedin ve çözüm süreçlerini yönetin.' : 'Veriye dayalı kararlar için gelişmiş istatistikler.'}
           </p>
-          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontWeight: 600, color: 'var(--primary-color)' }}>Genel Çözüm İlerlemesi</span>
-            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-color)' }}>%{progress}</span>
-          </div>
-          <div style={{ height: '6px', background: 'var(--bg-hover)', borderRadius: '3px', marginTop: '0.4rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'linear-gradient(90deg, var(--primary-color), var(--accent-light))', width: `${progress}%`, transition: 'width 0.5s ease' }}></div>
-          </div>
         </div>
-        {mode !== 'reports' && (
-        <div className="flex items-center gap-4 flex-wrap" style={{ flex: '1 1 auto', justifyContent: 'flex-end' }}>
-          {selectedIds.length > 0 ? (
-            <div className="flex bg-danger-light p-2 rounded gap-4" style={{ border: '1px solid var(--danger)', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
-               <span style={{ fontWeight: 600, color: 'var(--danger)', alignSelf: 'center' }}>{selectedIds.length} Seçili</span>
-               <button className="btn btn-outline" style={{ color: 'initial', borderColor: 'var(--success)' }} onClick={() => exportToExcel(true)}>
-                 <Download size={18} /> İndir
-               </button>
-               {hasEditPermission && (
-                 <button className="btn btn-outline" style={{ color: 'white', backgroundColor: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => {
-                   if(confirm(`${selectedIds.length} kaydı tamamen silmek istediğinize emin misiniz?`)){
-                     if (mode === 'seller') {
-                       useStore.getState().bulkDeleteNotes(selectedIds);
-                     } else {
-                       useStore.getState().bulkDeleteIssues(selectedIds);
-                     }
-                     setSelectedIds([]);
-                   }
-                 }}>
-                   <Trash2 size={18} /> Sil
-                 </button>
-               )}
-            </div>
-          ) : (
-            <>
-              {mode === 'seller' && hasEditPermission && <input type="file" accept=".csv" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportCSV} />}
-              {mode === 'seller' && hasEditPermission && (
-                <button className="btn btn-outline" onClick={() => fileInputRef.current?.click()}>
-                  <Upload size={18} /> İçe Aktar
-                </button>
-              )}
-              <button className="btn btn-outline" onClick={() => exportToExcel(false)} style={{ color: 'var(--status-resolved)' }}>
-                <Download size={18} /> Excel'e Aktar
-              </button>
-              {mode === 'seller' && (
-                <ColumnSettingsPanel
-                  columns={columnConfig.columns}
-                  renameColumn={columnConfig.renameColumn}
-                  toggleColumn={columnConfig.toggleColumn}
-                  moveColumn={columnConfig.moveColumn}
-                  resetColumns={columnConfig.resetColumns}
-                />
-              )}
-              <button className="btn btn-outline" onClick={() => setIsSidebarOpen(true)}>
-                <BookOpen size={18} /> Serbest Defter
-              </button>
-              {hasEditPermission && (
-                <button className="btn btn-primary" onClick={handleAddNewRow}>
-                  <Plus size={18} /> Yeni Ekle
-                </button>
-              )}
-            </>
-          )}
+        <div className="flex items-center gap-6">
+           <div className="flex flex-col items-end">
+             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktif Dönem</span>
+             <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{viewMode === 'all' ? 'TÜM ZAMANLAR' : selectedMonth}</span>
+           </div>
+           <div style={{ paddingLeft: '1.5rem', borderLeft: '2px solid var(--border-color)', textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-resolved)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Genel İlerleme</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>%{progress}</div>
+           </div>
         </div>
-        )}
       </div>
 
-      {mode === 'reports' ? (
+      <div className="flex justify-between items-center mb-8 p-1.5" style={{ background: 'var(--bg-panel)', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
+          <button
+            className={`btn ${mode === 'seller' ? 'btn-primary' : ''}`}
+            style={{ padding: '0.6rem 1.5rem', borderRadius: '10px', background: mode === 'seller' ? 'var(--primary-color)' : 'transparent', color: mode === 'seller' ? '#fff' : 'var(--text-secondary)', border: 'none' }}
+            onClick={() => setMode('seller')}
+          >
+            <Search size={18} /> Satıcı Takip
+          </button>
+          <button
+            className={`btn ${mode === 'issues' ? 'btn-primary' : ''}`}
+            style={{ padding: '0.6rem 1.5rem', borderRadius: '10px', background: mode === 'issues' ? 'var(--primary-color)' : 'transparent', color: mode === 'issues' ? '#fff' : 'var(--text-secondary)', border: 'none' }}
+            onClick={() => setMode('issues')}
+          >
+            <Plus size={18} /> Genel Sorunlar
+          </button>
+          <button
+            className={`btn ${mode === 'reporting' ? 'btn-primary' : ''}`}
+            style={{ padding: '0.6rem 1.5rem', borderRadius: '10px', background: mode === 'reporting' ? 'var(--primary-color)' : 'transparent', color: mode === 'reporting' ? '#fff' : 'var(--text-secondary)', border: 'none' }}
+            onClick={() => setMode('reporting')}
+          >
+            <TrendingUp size={18} /> Raporlama
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {mode !== 'reporting' && (
+            <div className="flex items-center gap-2">
+              {selectedIds.length > 0 ? (
+                <div className="flex items-center gap-3 bg-danger-light p-1 px-3 rounded-lg border border-red-200">
+                   <span style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.85rem' }}>{selectedIds.length} Kayıt Seçildi</span>
+                   <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem' }} onClick={() => exportToExcel(true)}>İndir</button>
+                   {hasEditPermission && (
+                     <button className="btn" style={{ background: 'var(--danger)', color: '#fff', padding: '0.4rem 0.8rem' }} onClick={() => {
+                        if(confirm('Seçili kayıtlar silinecek. Emin misiniz?')){
+                          if (mode === 'seller') useStore.getState().bulkDeleteNotes(selectedIds);
+                          else useStore.getState().bulkDeleteIssues(selectedIds);
+                          setSelectedIds([]);
+                        }
+                     }}>Sil</button>
+                   )}
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mr-2">
+                    <button className={`btn btn-outline ${viewMode === 'monthly' ? 'active' : ''}`} style={{ background: viewMode === 'monthly' ? 'var(--bg-hover)' : 'transparent' }} onClick={() => setViewMode('monthly')}>Aylık</button>
+                    <button className={`btn btn-outline ${viewMode === 'all' ? 'active' : ''}`} style={{ background: viewMode === 'all' ? 'var(--bg-hover)' : 'transparent' }} onClick={() => setViewMode('all')}>Tümü</button>
+                    {viewMode === 'monthly' && (
+                      <input type="month" className="form-input" style={{ width: '150px', height: '38px' }} value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
+                    )}
+                  </div>
+                  <button className="btn btn-outline" onClick={() => exportToExcel(false)}><Download size={18} /> Dışa Aktar</button>
+                  {hasEditPermission && (
+                    <button className="btn btn-primary" onClick={handleAddNewRow}><Plus size={18} /> Yeni Kayıt</button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {mode === 'reporting' ? (
         <ReportingPanel />
       ) : (
         <>
-          <div className="flex gap-4 mb-4" style={{ display: 'grid', gridTemplateColumns: mode === 'seller' ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
-            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>Toplam Aktif</h3>
-              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{activeCount}</p>
+          <div className="flex gap-6 mb-8" style={{ display: 'grid', gridTemplateColumns: mode === 'seller' ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
+            <div className="stat-card" style={{ borderLeft: '4px solid var(--text-primary)' }}>
+              <div className="flex justify-between items-start mb-2">
+                 <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>TOPLAM AKTİF</h3>
+                 <div style={{ background: 'var(--bg-hover)', padding: '0.5rem', borderRadius: '8px' }}><Search size={16} /></div>
+              </div>
+              <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{activeCount}</p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Aktif taleplerin özeti</div>
             </div>
-            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-pending)' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>Devam Eden</h3>
-              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-pending)' }}>{pendingCount}</p>
+
+            <div className="stat-card" style={{ borderLeft: '4px solid var(--status-pending)' }}>
+              <div className="flex justify-between items-start mb-2">
+                 <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>DEVAM EDEN</h3>
+                 <div style={{ background: 'var(--status-pending-bg)', padding: '0.5rem', borderRadius: '8px', color: 'var(--status-pending)' }}><Plus size={16} /></div>
+              </div>
+              <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--status-pending)' }}>{pendingCount}</p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Müdahale bekleyenler</div>
             </div>
-            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-resolved)' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>Çözülen</h3>
-              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
+
+            <div className="stat-card" style={{ borderLeft: '4px solid var(--status-resolved)' }}>
+              <div className="flex justify-between items-start mb-2">
+                 <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>ÇÖZÜLENLER</h3>
+                 <div style={{ background: 'var(--status-resolved-bg)', padding: '0.5rem', borderRadius: '8px', color: 'var(--status-resolved)' }}><Plus size={16} style={{ transform: 'rotate(45deg)' }} /></div>
+              </div>
+              <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--status-resolved)' }}>{resolvedCount}</p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Tamamlanan işlemler</div>
             </div>
-            <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid var(--status-archived)' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>Arşivlenen</h3>
-              <p style={{ fontSize: '2.5rem', fontWeight: '600', color: 'var(--status-archived)' }}>{archivedCount}</p>
+
+            <div className="stat-card" style={{ borderLeft: '4px solid var(--status-archived)' }}>
+              <div className="flex justify-between items-start mb-2">
+                 <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>ARŞİVLENEN</h3>
+                 <div style={{ background: 'var(--status-archived-bg)', padding: '0.5rem', borderRadius: '8px', color: 'var(--status-archived)' }}><Trash2 size={16} /></div>
+              </div>
+              <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--status-archived)' }}>{archivedCount}</p>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Geçmiş kayıtlar</div>
             </div>
+
             {mode === 'seller' && (
-              <div className="stat-card" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #f43f5e', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <h3 style={{ marginBottom: '0.2rem', fontSize: '0.9rem' }}>En Çok Talep Gelen</h3>
-                <p style={{ fontSize: '1.1rem', fontWeight: '600', color: '#f43f5e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={topSellerStats.name}>{topSellerStats.name}</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>{topSellerStats.products} Ürün Müdahale</p>
+              <div className="stat-card" style={{ borderLeft: '4px solid var(--danger)' }}>
+                <div className="flex justify-between items-start mb-2">
+                   <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>LİDER MAĞAZA</h3>
+                   <div style={{ background: 'var(--danger-light)', padding: '0.5rem', borderRadius: '8px', color: 'var(--danger)' }}><TrendingUp size={16} /></div>
+                </div>
+                <p style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--danger)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={topSellerStats.name}>{topSellerStats.name}</p>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>{topSellerStats.products} Ürün Müdahale</div>
               </div>
             )}
           </div>
